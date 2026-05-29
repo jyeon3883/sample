@@ -2,6 +2,12 @@
 
 단일 Next.js 앱 + 공유 패키지 monorepo (React **19.2.1**, Next **16.1.0**)
 
+## pnpm 설치
+npm install -g pnpm@latest-11
+
+pnpm 설치후
+pnpm i or pnpm install
+
 ## 폴더 구조 (단일 서비스용)
 
 `apps/` 없이 **루트가 Next 앱**, 공통 코드만 `packages/`에 둡니다.
