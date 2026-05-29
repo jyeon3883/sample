@@ -52,11 +52,4 @@ pnpm dev
 | `pnpm build` | Next 프로덕션 빌드 |
 | `pnpm codegen` | Orval API 클라이언트 생성 |
 | `pnpm typecheck` | 루트 + packages 타입 검사 |
-
-## 이전 프로젝트 삭제
-
-`C:\Users\jyeoun\Projects\next-tanstack-monorepo`는 Cursor가 폴더를 열어두면 삭제가 안 될 수 있습니다. 해당 워크스페이스를 닫은 뒤:
-
-```powershell
-Remove-Item -Recurse -Force "C:\Users\jyeoun\Projects\next-tanstack-monorepo"
-```
+| `pnpm storybook` | 스토리북 (localhost:6006) |
