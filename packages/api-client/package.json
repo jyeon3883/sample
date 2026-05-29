@@ -1,0 +1,23 @@
+{
+  "name": "@repo/api-client",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts",
+    "./axios": "./src/axios-instance.ts"
+  },
+  "scripts": {
+    "codegen": "orval && node ./scripts/split-models-by-tag.mjs && node ./scripts/sync-endpoint-exports.mjs",
+    "codegen:main": "orval --project mainApi && node ./scripts/split-models-by-tag.mjs && node ./scripts/sync-endpoint-exports.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "axios": "^1.16.1"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "dotenv": "^17.2.3",
+    "orval": "^8.12.3",
+    "typescript": "^5.8.3"
+  }
+}

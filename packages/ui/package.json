@@ -1,0 +1,54 @@
+{
+  "name": "@repo/ui",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts",
+    "./button": "./src/button.tsx",
+    "./qcell": "./src/qcell/index.tsx",
+    "./chart": "./src/chart/index.tsx",
+    "./atoms": "./src/atoms/index.ts",
+    "./atoms/button": "./src/atoms/button.tsx",
+    "./atoms/tabs": "./src/atoms/tabs.tsx",
+    "./atoms/input": "./src/atoms/input.tsx",
+    "./atoms/select": "./src/atoms/select.tsx",
+    "./atoms/typography": "./src/atoms/typography.tsx",
+    "./atoms/feedback": "./src/atoms/feedback.tsx",
+    "./molecules": "./src/molecules/index.ts",
+    "./molecules/search-input": "./src/molecules/search-input.tsx",
+    "./molecules/labeled-select": "./src/molecules/labeled-select.tsx",
+    "./molecules/tab-panel": "./src/molecules/tab-panel.tsx"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build -o storybook-static"
+  },
+  "devDependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/material": "^7.3.11",
+    "@repo/typescript-config": "workspace:*",
+    "@storybook/addon-a11y": "10.4.1",
+    "@storybook/addon-docs": "10.4.1",
+    "@storybook/react-vite": "10.4.1",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "19.2.0",
+    "react": "19.2.1",
+    "react-dom": "19.2.1",
+    "storybook": "10.4.1",
+    "typescript": "^5.8.3",
+    "vite": "^6.4.2"
+  },
+  "peerDependencies": {
+    "@emotion/react": "^11.11.0",
+    "@emotion/styled": "^11.11.0",
+    "@mui/material": "^7.3.11",
+    "react": "^19.2.1"
+  },
+  "dependencies": {
+    "echarts": "^6.1.0",
+    "echarts-for-react": "^3.0.6",
+    "qcell-react": "1.0.98"
+  }
+}

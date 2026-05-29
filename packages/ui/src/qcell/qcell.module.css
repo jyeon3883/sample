@@ -1,0 +1,14 @@
+/* .qcellScope {
+  width: 100%;
+}
+
+.qcellScope :global(.qcell) {
+  font-size: 13px;
+} */
+/* 
+.qcellScope :global(.rt-qc-cell-headerrows),
+.qcellScope :global(.rt-qc-cell-headercols) {
+  background-color: #7caee0 ;
+  border-color: #6a9fd5 ;
+  color: #ffffff ;
+} */
