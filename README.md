@@ -558,7 +558,11 @@ const UserFormSchema = z.object({
 
 type UserFormValues = z.infer<typeof UserFormSchema>; // 타입 자동 추론
 
-const { register, handleSubmit, formState: { errors } } = useForm<UserFormValues>({
+const {
+  register,
+  handleSubmit,
+  formState: { errors },
+} = useForm<UserFormValues>({
   resolver: zodResolver(UserFormSchema),
 });
 ```
@@ -579,7 +583,7 @@ packages/types/src/schemas/
 
 ## Zustand — 클라이언트 상태 관리
 
-> 참조: [https://zustand.docs.pmnd.rs/](https://zustand.docs.pmnd.rs/)
+> 참조: [https://zustand.docs.pmnd.rs/](https://zustand.docs.pmnd.rs/learn/getting-started/introduction)
 
 ### 개요
 
@@ -594,11 +598,11 @@ Zustand                →  전역 상태, selector로 필요한 값만 구독 �
 
 ### 두 가지 패턴 비교
 
-| 구분 | Volatile (일반 스토어) | Persistent (persist 미들웨어) |
-| ---- | ---------------------- | ----------------------------- |
-| 저장 위치 | 브라우저 메모리 | `localStorage` |
-| 새로고침 후 | 초기값으로 리셋 | 마지막 값 그대로 복원 |
-| 적합한 데이터 | UI 상태, 임시 필터, 모달 개폐 여부 | 사용자 설정, 테마, 언어 등 |
+| 구분          | Volatile (일반 스토어)             | Persistent (persist 미들웨어) |
+| ------------- | ---------------------------------- | ----------------------------- |
+| 저장 위치     | 브라우저 메모리                    | `localStorage`                |
+| 새로고침 후   | 초기값으로 리셋                    | 마지막 값 그대로 복원         |
+| 적합한 데이터 | UI 상태, 임시 필터, 모달 개폐 여부 | 사용자 설정, 테마, 언어 등    |
 
 ---
 
@@ -684,8 +688,8 @@ export const usePersistentStore = create<PersistentState>()(
       reset: () => set({ count: 0, message: "" }),
       setMessage: (msg) => set({ message: msg }),
     }),
-    { name: "zustand-demo-persistent" }, // localStorage 키 이름
-  ),
+    { name: "zustand-demo-persistent" } // localStorage 키 이름
+  )
 );
 ```
 
@@ -718,21 +722,22 @@ export function PersistentPanel() {
 
 ```ts
 persist(stateCreator, {
-  name: "my-store",              // localStorage 키 이름 (필수)
+  name: "my-store", // localStorage 키 이름 (필수)
   storage: createJSONStorage(() => sessionStorage), // 기본값: localStorage
-  partialize: (state) => ({      // 저장할 필드만 선택 (나머지는 메모리에만 유지)
+  partialize: (state) => ({
+    // 저장할 필드만 선택 (나머지는 메모리에만 유지)
     count: state.count,
   }),
-  version: 1,                    // 스키마 버전 관리 (migrate 옵션과 함께 사용)
-})
+  version: 1, // 스키마 버전 관리 (migrate 옵션과 함께 사용)
+});
 ```
 
 ### FSD 위치 기준
 
-| 범위 | 위치 |
-| ---- | ---- |
-| 특정 feature에서만 쓰는 스토어 | `src/features/{name}/model/use-{name}-store.ts` |
-| 여러 feature에서 공유하는 전역 스토어 | `src/shared/model/use-{name}-store.ts` |
+| 범위                                  | 위치                                            |
+| ------------------------------------- | ----------------------------------------------- |
+| 특정 feature에서만 쓰는 스토어        | `src/features/{name}/model/use-{name}-store.ts` |
+| 여러 feature에서 공유하는 전역 스토어 | `src/shared/model/use-{name}-store.ts`          |
 
 외부에서는 항상 `index.ts`를 통해서만 접근합니다.
 
