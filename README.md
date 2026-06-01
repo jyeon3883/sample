@@ -767,6 +767,222 @@ src/features/zustand-demo/
 
 ---
 
+## MDI 탭 시스템
+
+> 관련 파일: `packages/ui/src/layout/mdi/`, `src/shared/config/routes.ts`, `app/(main)/layout.tsx`
+
+화면 전환 없이 여러 페이지를 탭으로 열어두는 MDI(Multiple Document Interface) 시스템입니다.  
+탭 목록과 활성 탭은 `localStorage`에 자동 저장되어 **새로고침 후에도 복원**됩니다.
+
+### 새 페이지를 탭으로 추가하는 방법
+
+`src/shared/config/routes.ts` 의 `TAB_ROUTES` 에만 항목을 추가하면 됩니다.  
+`app/(main)/layout.tsx` 는 수정하지 않아도 자동으로 반영됩니다.
+
+```ts
+// src/shared/config/routes.ts
+export const TAB_ROUTES: Record<string, TabRouteConfig> = {
+  // 기존 항목들 ...
+
+  "/settings": {
+    title: "설정",
+    loader: () =>
+      import("@/screens/settings").then((m) => ({ default: m.SettingsPage })),
+  },
+};
+```
+
+---
+
+### 탭 상태 저장 — `useTabState`
+
+탭 컴포넌트 내에서 `useState` 대신 `useTabState`를 사용하면  
+다른 탭으로 이동(언마운트)했다가 돌아와도 상태가 유지됩니다.  
+탭을 닫으면 해당 상태는 자동으로 삭제됩니다.
+
+**단일 값 예제**
+
+```tsx
+import { useTabState } from "@repo/ui/layout/mdi";
+
+function SettingsPage() {
+  // useState 처럼 사용 — 언마운트/리마운트 후에도 값 유지
+  const [darkMode, setDarkMode] = useTabState("/settings", false);
+
+  return (
+    <label>
+      <input
+        type="checkbox"
+        checked={darkMode}
+        onChange={(e) => setDarkMode(e.target.checked)}
+      />
+      다크 모드
+    </label>
+  );
+}
+```
+
+**여러 필드를 객체로 묶기 (권장)**
+
+```tsx
+import { useTabState } from "@repo/ui/layout/mdi";
+
+interface SettingsForm {
+  theme: "light" | "dark";
+  language: string;
+  fontSize: number;
+}
+
+const INITIAL: SettingsForm = { theme: "light", language: "ko", fontSize: 14 };
+
+function SettingsPage() {
+  const [form, setForm] = useTabState<SettingsForm>("/settings", INITIAL);
+
+  // 함수형 업데이트로 일부 필드만 변경
+  const handleTheme = (theme: "light" | "dark") =>
+    setForm((prev) => ({ ...prev, theme }));
+
+  return (
+    <select value={form.theme} onChange={(e) => handleTheme(e.target.value as "light" | "dark")}>
+      <option value="light">라이트</option>
+      <option value="dark">다크</option>
+    </select>
+  );
+}
+```
+
+---
+
+### 탭 닫기 전 콜백 — `useRegisterTabClose`
+
+탭 컴포넌트 내에서 `useRegisterTabClose`를 사용하면  
+사용자가 탭을 닫기 전에 함수를 실행할 수 있습니다.
+
+| 반환값 | 동작 |
+| --- | --- |
+| `false` | 닫기 취소 (탭 유지) |
+| `true` / `void` | 닫기 진행 |
+| `Promise<boolean>` | await 후 처리 (비동기 다이얼로그 등) |
+
+> **주의:** 비활성 탭(언마운트 상태)을 닫을 때는 콜백이 실행되지 않습니다.  
+> 현재 활성(포커스된) 탭을 닫을 때만 동작합니다.
+
+**동기 확인 예제**
+
+```tsx
+import { useRegisterTabClose } from "@repo/ui/layout/mdi";
+import { useState } from "react";
+
+function NoticePage() {
+  const [isDirty, setIsDirty] = useState(false);
+
+  useRegisterTabClose("/notice", () => {
+    if (!isDirty) return true; // 변경사항 없으면 바로 닫기
+    return window.confirm("저장하지 않은 변경사항이 있습니다. 닫으시겠습니까?");
+  });
+
+  return <div>...</div>;
+}
+```
+
+**비동기 MUI Dialog 예제**
+
+```tsx
+import { useRegisterTabClose } from "@repo/ui/layout/mdi";
+import { useState } from "react";
+
+function NoticePage() {
+  const [isDirty, setIsDirty] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [resolve, setResolve] = useState<((v: boolean) => void) | null>(null);
+
+  useRegisterTabClose("/notice", () => {
+    if (!isDirty) return true;
+    return new Promise<boolean>((res) => {
+      setResolve(() => res); // 다이얼로그 확인/취소에서 res(true/false) 호출
+      setOpen(true);
+    });
+  });
+
+  return (
+    <>
+      {/* 폼 내용 */}
+      <ConfirmDialog
+        open={open}
+        onConfirm={() => { setOpen(false); resolve?.(true); }}
+        onCancel={() => { setOpen(false); resolve?.(false); }}
+      />
+    </>
+  );
+}
+```
+
+---
+
+### 전체 예제 — `useTabState` + `useRegisterTabClose`
+
+```tsx
+import { useTabState, useRegisterTabClose } from "@repo/ui/layout/mdi";
+
+interface NoticeForm {
+  title: string;
+  content: string;
+}
+
+const INITIAL_FORM: NoticeForm = { title: "", content: "" };
+
+export function NoticePage() {
+  // ① 탭 상태: 다른 탭 이동 후 복귀해도 입력값 유지
+  const [form, setForm] = useTabState<NoticeForm>("/notice", INITIAL_FORM);
+  const isDirty = form.title !== "" || form.content !== "";
+
+  // ② 탭 닫기 전 콜백: 입력값이 있으면 확인 요청
+  useRegisterTabClose("/notice", () => {
+    if (!isDirty) return true;
+    return window.confirm("작성 중인 내용이 있습니다. 탭을 닫으시겠습니까?");
+  });
+
+  const update = (field: keyof NoticeForm) => (value: string) =>
+    setForm((prev) => ({ ...prev, [field]: value }));
+
+  return (
+    <form>
+      <input
+        placeholder="제목"
+        value={form.title}
+        onChange={(e) => update("title")(e.target.value)}
+      />
+      <textarea
+        placeholder="내용"
+        value={form.content}
+        onChange={(e) => update("content")(e.target.value)}
+      />
+      <button type="button" onClick={() => setForm(INITIAL_FORM)}>
+        초기화
+      </button>
+    </form>
+  );
+}
+```
+
+### MDI 탭 관련 파일 구조
+
+```
+packages/ui/src/layout/mdi/
+├── index.ts                    ← public API (export 목록)
+├── mdi-tab-context.tsx         ← Context + openTab / closeTab / activateTab
+├── mdi-tab-bar.tsx             ← 탭 바 UI
+├── mdi-tab-panel.tsx           ← 탭 패널 (활성 탭만 마운트)
+├── use-mdi-tab-store.ts        ← Zustand persist 스토어 (탭 목록, activeId)
+├── use-tab-state.ts            ← useTabState 훅
+└── use-register-tab-close.ts  ← useRegisterTabClose 훅
+
+src/shared/config/routes.ts    ← TAB_ROUTES (새 탭 등록은 여기만 수정)
+app/(main)/layout.tsx           ← MDI 레이아웃 (직접 수정 불필요)
+```
+
+---
+
 ## 새 기능 넣을 때 (체크리스트)
 
 | 질문                                 | 넣을 곳                                    |

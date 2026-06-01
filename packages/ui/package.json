@@ -51,7 +51,8 @@
     "@emotion/styled": "^11.11.0",
     "@mui/icons-material": "^7.3.11",
     "@mui/material": "^7.3.11",
-    "react": "^19.2.1"
+    "react": "^19.2.1",
+    "zustand": "^5.0.0"
   },
   "dependencies": {
     "echarts": "^6.1.0",
