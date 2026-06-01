@@ -1,8 +1,8 @@
-export { MdiTabProvider, useMdiTab } from "./mdi-tab-context";
-export type { MdiTab } from "./mdi-tab-context";
-export { MdiTabBar } from "./mdi-tab-bar";
-export { MdiTabPanel } from "./mdi-tab-panel";
-export { useTabState } from "./use-tab-state";
-export { useRegisterTabClose } from "./use-register-tab-close";
-export { useMdiTabStore } from "./use-mdi-tab-store";
-export type { MdiTabMeta } from "./use-mdi-tab-store";
+export { MdiTabProvider, useMdiTab } from "./MdiTabContext";
+export type { MdiTab } from "./MdiTabContext";
+export { MdiTabBar } from "./MdiTabBar";
+export { MdiTabPanel } from "./MdiTabPanel";
+export { useTabState } from "./useTabState";
+export { useRegisterTabClose } from "./useRegisterTabClose";
+export { useMdiTabStore } from "./useMdiTabStore";
+export type { MdiTabMeta } from "./useMdiTabStore";

@@ -1,1 +1,1 @@
-export { QnaPage } from "./ui/qna-page";
+export { QnaPage } from "./ui/QnaPage";

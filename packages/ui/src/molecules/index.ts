@@ -1,7 +1,7 @@
-export { LabeledSelect } from "./labeled-select";
-export type { LabeledSelectOption, LabeledSelectProps } from "./labeled-select";
-export { SearchInput } from "./search-input";
-export type { SearchInputProps } from "./search-input";
-export { TabPanel } from "./tab-panel";
-export type { TabPanelProps } from "./tab-panel";
+export { LabeledSelect } from "./LabeledSelect";
+export type { LabeledSelectOption, LabeledSelectProps } from "./LabeledSelect";
+export { SearchInput } from "./SearchInput";
+export type { SearchInputProps } from "./SearchInput";
+export { TabPanel } from "./TabPanel";
+export type { TabPanelProps } from "./TabPanel";
 

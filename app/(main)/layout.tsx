@@ -18,8 +18,8 @@ import {
   useMdiTab,
   useMdiTabStore,
 } from "@repo/ui/layout/mdi";
-import { AppHeader } from "@/widgets/app-header";
-import { AppSidebar } from "@/widgets/app-sidebar";
+import { AppHeader } from "@/widgets/appHeader";
+import { AppSidebar } from "@/widgets/appSidebar";
 import { TAB_ROUTES } from "@/shared/config/routes";
 
 // 모듈 레벨에서 한 번만 생성 (리렌더 시 재생성 없음)
