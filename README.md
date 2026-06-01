@@ -139,6 +139,39 @@ export default eslintConfig;
 
 ---
 
+## 명명 규칙 (Naming Convention)
+
+| 대상 | 규칙 | 예시 |
+| ---- | ---- | ---- |
+| **폴더 (slice 이름)** | camelCase | `qnaCreate/`, `apiPlayground/`, `zustandDemo/` |
+| **React 컴포넌트 파일** | PascalCase | `QnaCreateForm.tsx`, `AppHeader.tsx` |
+| **훅 파일** | camelCase (`use` 접두사 유지) | `useQnaForm.ts`, `useTabState.ts` |
+| **스토어 / 모델 파일** | camelCase | `volatileStore.ts`, `persistentStore.ts` |
+| **타입 / 설정 / 유틸 파일** | camelCase | `types.ts`, `routes.ts` |
+| **배럴 파일** | 항상 `index.ts` 고정 | `index.ts` |
+| **Next.js 예약 파일** | Next.js 규약 유지 (변경 불가) | `page.tsx`, `layout.tsx`, `globals.css` |
+| **CSS 모듈** | 컴포넌트와 동일한 이름, 소문자 유지 | `qcell.module.css` |
+
+**요약: 폴더 camelCase · 컴포넌트 PascalCase · 그 외 camelCase**
+
+```
+src/features/
+└── qnaCreate/                  ← 폴더: camelCase
+    ├── model/
+    │   └── useQnaForm.ts       ← 훅: camelCase
+    ├── ui/
+    │   └── QnaCreateForm.tsx   ← 컴포넌트: PascalCase
+    └── index.ts                ← 배럴: 항상 index.ts
+```
+
+> **왜 이 규칙인가?**
+>
+> - 폴더 이름에 하이픈(`-`)이 포함되면 일부 도구(ESLint import 플러그인, shell 등)에서 따옴표 처리가 필요합니다. camelCase는 JavaScript 식별자로 바로 사용할 수 있어 import 경로가 깔끔합니다.
+> - 컴포넌트 파일은 내보내는 함수와 이름을 일치시켜 파일만 봐도 어떤 컴포넌트인지 바로 알 수 있습니다.
+> - `index.ts`는 barrel 역할로 항상 고정합니다.
+
+---
+
 ## 폴더 구조 (단일 서비스용)
 
 `apps/` 없이 **루트가 Next 앱**, 공통 코드만 `packages/`에 둡니다.
@@ -182,8 +215,8 @@ app/ (Next)  →  screens  →  widgets  →  features  →  entities  →  shar
 | `app/` (Next)      | URL, `layout`, `metadata`. 비즈니스 로직 없음                               | `app/page.tsx` → `@/screens/home` re-export               |
 | `src/application/` | FSD app 레이어 — Provider, 초기화                                           | `AppProviders` (MUI + Query + Theme)                      |
 | `src/screens/`     | **한 라우트 화면** 조립. FSD의 pages                                        | `home`, `notice`, `qna`                                   |
-| `src/widgets/`     | 여러 feature/entity를 묶은 **큰 UI 블록**                                   | `demo-dashboard`, `board-nav`                             |
-| `src/features/`    | **사용자가 하는 동작 하나**. UI + 그 동작에 필요한 상태·API 호출을 묶음     | `demo-form`(폼 제출), `api-playground`(엔드포인트 테스트) |
+| `src/widgets/`     | 여러 feature/entity를 묶은 **큰 UI 블록**                                   | `demoDashboard`, `boardNav`                               |
+| `src/features/`    | **사용자가 하는 동작 하나**. UI + 그 동작에 필요한 상태·API 호출을 묶음     | `demoForm`(폼 제출), `apiPlayground`(엔드포인트 테스트)   |
 | `src/entities/`    | **앱이 다루는 핵심 데이터 단위**. 타입·모델만 가짐. feature에서 조립해서 씀 | `notice`(공지 타입), `qna`(QnA 타입)                      |
 | `src/shared/`      | 도메인 없는 앱 전용 유틸                                                    | `shared/config/routes.ts`                                 |
 | `packages/*`       | 멀티앱·인프라급 공통 (FSD shared)                                           | `@repo/ui`, `@repo/api-client`, `@repo/query`             |
@@ -194,21 +227,21 @@ app/ (Next)  →  screens  →  widgets  →  features  →  entities  →  shar
 
 기능/엔티티 폴더(slice) 안에서는 **파일 종류**별로 segment를 둡니다.
 
-| segment  | 넣는 것                    | 예시                                                             |
-| -------- | -------------------------- | ---------------------------------------------------------------- |
-| `ui/`    | React 컴포넌트             | `features/demo-form/ui/demo-form-panel.tsx`                      |
-| `model/` | hook, store, 비즈니스 상태 | `entities/notice/model/types.ts`, (추가 시) `use-notice-list.ts` |
-| `api/`   | API 호출·Orval 래핑        | (추가 시) `features/notice-list/api/get-notices.ts`              |
-| `lib/`   | slice **내부만** 쓰는 헬퍼 | slice 전용 포맷터 등                                             |
+| segment  | 넣는 것                    | 예시                                                                 |
+| -------- | -------------------------- | -------------------------------------------------------------------- |
+| `ui/`    | React 컴포넌트             | `features/demoForm/ui/DemoFormPanel.tsx`                             |
+| `model/` | hook, store, 비즈니스 상태 | `entities/notice/model/types.ts`, (추가 시) `useNoticeList.ts`       |
+| `api/`   | API 호출·Orval 래핑        | (추가 시) `features/noticeList/api/getNotices.ts`                    |
+| `lib/`   | slice **내부만** 쓰는 헬퍼 | slice 전용 포맷터 등                                                 |
 
 외부에서는 slice의 **`index.ts`(public API)** 만 import 합니다.
 
 ```ts
 // ✅
-import { DemoFormPanel } from "@/features/demo-form";
+import { DemoFormPanel } from "@/features/demoForm";
 
 // ❌ segment·내부 파일 직접 import
-import { DemoFormPanel } from "@/features/demo-form/ui/demo-form-panel";
+import { DemoFormPanel } from "@/features/demoForm/ui/DemoFormPanel";
 ```
 
 ### Import 허용 표
@@ -244,19 +277,19 @@ hook은 **읽기냐 / 쓰기냐**에 따라 위치가 달라집니다.
 entities/
   notice/
     model/
-      use-notice-list.ts    ← GET 목록 조회 ✅
-      use-notice-detail.ts  ← GET 상세 조회 ✅
+      useNoticeList.ts    ← GET 목록 조회 ✅
+      useNoticeDetail.ts  ← GET 상세 조회 ✅
 
 features/
-  notice-create/
+  noticeCreate/
     model/
-      use-notice-create.ts  ← POST 등록 ✅
-  notice-edit/
+      useNoticeCreate.ts  ← POST 등록 ✅
+  noticeEdit/
     model/
-      use-notice-edit.ts    ← PUT 수정 ✅
-  notice-delete/
+      useNoticeEdit.ts    ← PUT 수정 ✅
+  noticeDelete/
     model/
-      use-notice-delete.ts  ← DELETE 삭제 ✅
+      useNoticeDelete.ts  ← DELETE 삭제 ✅
 ```
 
 > **조회 hook을 entities에 두는 이유:** screens, widgets, features 어디서든 공통으로 재사용되기 때문입니다.  
@@ -290,9 +323,9 @@ export { NoticePage as default } from "@/screens/notice";
 ### 2) screen — 위젯·타이포만 조립
 
 ```tsx
-// src/screens/home/ui/home-page.tsx
+// src/screens/home/ui/HomePage.tsx
 import { Typography } from "@repo/ui";
-import { DemoDashboard } from "@/widgets/demo-dashboard";
+import { DemoDashboard } from "@/widgets/demoDashboard";
 
 export function HomePage() {
   return (
@@ -307,16 +340,16 @@ export function HomePage() {
 ### 3) widget — feature 여러 개 + UI 패키지
 
 ```tsx
-// src/widgets/demo-dashboard/ui/demo-dashboard.tsx
-import { PublicEndpointPanel } from "@/features/api-playground";
-import { DemoFormPanel } from "@/features/demo-form";
+// src/widgets/demoDashboard/ui/DemoDashboard.tsx
+import { PublicEndpointPanel } from "@/features/apiPlayground";
+import { DemoFormPanel } from "@/features/demoForm";
 // + @repo/ui (Tabs, QCELL, Chart)
 ```
 
 ### 4) feature — 유스케이스 한 덩어리
 
 ```tsx
-// src/features/api-playground/ui/public-endpoint-panel.tsx
+// src/features/apiPlayground/ui/PublicEndpointPanel.tsx
 import { usePublicEndpoint } from "@repo/api-client";
 import { Button } from "@repo/ui";
 ```
@@ -367,43 +400,43 @@ src/
 │   └── notice/
 │       ├── model/
 │       │   ├── types.ts              # Notice 타입 정의
-│       │   ├── use-notice-list.ts    # GET 목록 조회 hook
-│       │   └── use-notice-detail.ts  # GET 상세 조회 hook
+│       │   ├── useNoticeList.ts      # GET 목록 조회 hook
+│       │   └── useNoticeDetail.ts    # GET 상세 조회 hook
 │       ├── ui/
-│       │   └── notice-card.tsx       # 공지 1건을 표시하는 기본 카드 UI
+│       │   └── NoticeCard.tsx        # 공지 1건을 표시하는 기본 카드 UI
 │       └── index.ts                  # 외부 공개 API
 │
 ├── features/
-│   ├── notice-create/
+│   ├── noticeCreate/
 │   │   ├── model/
 │   │   │   ├── schema.ts             # zod 유효성 검사 스키마
-│   │   │   └── use-notice-create.ts  # POST 등록 hook
+│   │   │   └── useNoticeCreate.ts    # POST 등록 hook
 │   │   ├── ui/
-│   │   │   └── notice-create-form.tsx
+│   │   │   └── NoticeCreateForm.tsx
 │   │   └── index.ts
-│   ├── notice-edit/
+│   ├── noticeEdit/
 │   │   ├── model/
-│   │   │   └── use-notice-edit.ts    # PUT 수정 hook
+│   │   │   └── useNoticeEdit.ts      # PUT 수정 hook
 │   │   ├── ui/
-│   │   │   └── notice-edit-form.tsx
+│   │   │   └── NoticeEditForm.tsx
 │   │   └── index.ts
-│   └── notice-delete/
+│   └── noticeDelete/
 │       ├── model/
-│       │   └── use-notice-delete.ts  # DELETE 삭제 hook
+│       │   └── useNoticeDelete.ts    # DELETE 삭제 hook
 │       ├── ui/
-│       │   └── notice-delete-button.tsx
+│       │   └── NoticeDeleteButton.tsx
 │       └── index.ts
 │
 ├── widgets/
-│   └── notice-board/
+│   └── noticeBoard/
 │       ├── ui/
-│       │   └── notice-board.tsx      # 목록 + 페이지네이션 조합 블록
+│       │   └── NoticeBoard.tsx       # 목록 + 페이지네이션 조합 블록
 │       └── index.ts
 │
 └── screens/
     └── notice/
         ├── ui/
-        │   └── notice-page.tsx       # 화면 조립만 담당
+        │   └── NoticePage.tsx        # 화면 조립만 담당
         └── index.ts
 ```
 
@@ -420,7 +453,7 @@ export type Notice = {
 };
 ```
 
-**② 조회 hook** `entities/notice/model/use-notice-list.ts`
+**② 조회 hook** `entities/notice/model/useNoticeList.ts`
 
 ```ts
 import { useQuery } from "@tanstack/react-query";
@@ -433,7 +466,7 @@ export function useNoticeList() {
 }
 ```
 
-**③ 유효성 검사 스키마** `features/notice-create/model/schema.ts`
+**③ 유효성 검사 스키마** `features/noticeCreate/model/schema.ts`
 
 ```ts
 import { z } from "zod";
@@ -444,7 +477,7 @@ export const noticeSchema = z.object({
 });
 ```
 
-**④ 등록 hook** `features/notice-create/model/use-notice-create.ts`
+**④ 등록 hook** `features/noticeCreate/model/useNoticeCreate.ts`
 
 ```ts
 import { useMutation } from "@tanstack/react-query";
@@ -456,11 +489,11 @@ export function useNoticeCreate() {
 }
 ```
 
-**⑤ 화면 조립** `screens/notice/ui/notice-page.tsx`
+**⑤ 화면 조립** `screens/notice/ui/NoticePage.tsx`
 
 ```tsx
-import { NoticeBoard } from "@/widgets/notice-board";
-import { NoticeCreateForm } from "@/features/notice-create";
+import { NoticeBoard } from "@/widgets/noticeBoard";
+import { NoticeCreateForm } from "@/features/noticeCreate";
 
 export function NoticePage() {
   return (
@@ -477,7 +510,7 @@ export function NoticePage() {
 | segment           | 무엇을 넣나          | 주의                                      |
 | ----------------- | -------------------- | ----------------------------------------- |
 | `model/types.ts`  | 타입·인터페이스      | 로직 없음, 순수 타입만                    |
-| `model/use-*.ts`  | custom hook          | 조회→entities, 쓰기→features              |
+| `model/use*.ts`   | custom hook          | 조회→entities, 쓰기→features              |
 | `model/schema.ts` | zod 등 유효성 스키마 | 해당 feature 안에서만 사용                |
 | `ui/*.tsx`        | React 컴포넌트       | 외부에서 index.ts 통해서만 import         |
 | `api/*.ts`        | API 호출 함수        | Orval 생성 함수 래핑                      |
@@ -610,7 +643,7 @@ Zustand                →  전역 상태, selector로 필요한 값만 구독 �
 
 페이지를 새로고침하면 초기값으로 돌아가는 일반 스토어입니다.
 
-**스토어 정의** `src/features/zustand-demo/model/volatile-store.ts`
+**스토어 정의** `src/features/zustandDemo/model/volatileStore.ts`
 
 ```ts
 import { create } from "zustand";
@@ -639,7 +672,7 @@ export const useVolatileStore = create<VolatileState>((set) => ({
 ```tsx
 "use client";
 
-import { useVolatileStore } from "../model/volatile-store";
+import { useVolatileStore } from "../model/volatileStore";
 
 export function VolatilePanel() {
   // selector로 필요한 값만 구독 → 해당 값이 변경될 때만 리렌더링
@@ -663,7 +696,7 @@ export function VolatilePanel() {
 
 `persist` 미들웨어를 사용해 상태를 `localStorage`에 자동으로 직렬화·역직렬화합니다.
 
-**스토어 정의** `src/features/zustand-demo/model/persistent-store.ts`
+**스토어 정의** `src/features/zustandDemo/model/persistentStore.ts`
 
 ```ts
 import { create } from "zustand";
@@ -698,7 +731,7 @@ export const usePersistentStore = create<PersistentState>()(
 ```tsx
 "use client";
 
-import { usePersistentStore } from "../model/persistent-store";
+import { usePersistentStore } from "../model/persistentStore";
 
 export function PersistentPanel() {
   const count = usePersistentStore((s) => s.count);
@@ -736,17 +769,17 @@ persist(stateCreator, {
 
 | 범위                                  | 위치                                            |
 | ------------------------------------- | ----------------------------------------------- |
-| 특정 feature에서만 쓰는 스토어        | `src/features/{name}/model/use-{name}-store.ts` |
-| 여러 feature에서 공유하는 전역 스토어 | `src/shared/model/use-{name}-store.ts`          |
+| 특정 feature에서만 쓰는 스토어        | `src/features/{name}/model/use{Name}Store.ts` |
+| 여러 feature에서 공유하는 전역 스토어 | `src/shared/model/use{Name}Store.ts`          |
 
 외부에서는 항상 `index.ts`를 통해서만 접근합니다.
 
 ```ts
 // ✅ 권장
-import { useVolatileStore } from "@/features/zustand-demo";
+import { useVolatileStore } from "@/features/zustandDemo";
 
 // ❌ 내부 파일 직접 접근 금지
-import { useVolatileStore } from "@/features/zustand-demo/model/volatile-store";
+import { useVolatileStore } from "@/features/zustandDemo/model/volatileStore";
 ```
 
 ### 데모 확인
@@ -754,15 +787,15 @@ import { useVolatileStore } from "@/features/zustand-demo/model/volatile-store";
 홈 화면 → **DemoDashboard** → **"Zustand 예제"** 탭에서 두 패턴을 직접 비교할 수 있습니다.
 
 ```
-src/features/zustand-demo/
+src/features/zustandDemo/
 ├── index.ts
 ├── model/
-│   ├── volatile-store.ts       ← create() 만 사용
-│   └── persistent-store.ts    ← persist() 미들웨어 적용
+│   ├── volatileStore.ts       ← create() 만 사용
+│   └── persistentStore.ts    ← persist() 미들웨어 적용
 └── ui/
-    ├── zustand-demo-panel.tsx  ← 탭 컨테이너
-    ├── volatile-panel.tsx      ← 리로드 시 초기화 예제
-    └── persistent-panel.tsx   ← 리로드 후 유지 예제
+    ├── ZustandDemoPanel.tsx  ← 탭 컨테이너
+    ├── VolatilePanel.tsx      ← 리로드 시 초기화 예제
+    └── PersistentPanel.tsx   ← 리로드 후 유지 예제
 ```
 
 ---
@@ -969,16 +1002,16 @@ export function NoticePage() {
 
 ```
 packages/ui/src/layout/mdi/
-├── index.ts                    ← public API (export 목록)
-├── mdi-tab-context.tsx         ← Context + openTab / closeTab / activateTab
-├── mdi-tab-bar.tsx             ← 탭 바 UI
-├── mdi-tab-panel.tsx           ← 탭 패널 (활성 탭만 마운트)
-├── use-mdi-tab-store.ts        ← Zustand persist 스토어 (탭 목록, activeId)
-├── use-tab-state.ts            ← useTabState 훅
-└── use-register-tab-close.ts  ← useRegisterTabClose 훅
+├── index.ts                  ← public API (export 목록)
+├── MdiTabContext.tsx          ← Context + openTab / closeTab / activateTab
+├── MdiTabBar.tsx              ← 탭 바 UI
+├── MdiTabPanel.tsx            ← 탭 패널 (활성 탭만 마운트)
+├── useMdiTabStore.ts          ← Zustand persist 스토어 (탭 목록, activeId)
+├── useTabState.ts             ← useTabState 훅
+└── useRegisterTabClose.ts    ← useRegisterTabClose 훅
 
-src/shared/config/routes.ts    ← TAB_ROUTES (새 탭 등록은 여기만 수정)
-app/(main)/layout.tsx           ← MDI 레이아웃 (직접 수정 불필요)
+src/shared/config/routes.ts   ← TAB_ROUTES (새 탭 등록은 여기만 수정)
+app/(main)/layout.tsx          ← MDI 레이아웃 (직접 수정 불필요)
 ```
 
 ---
@@ -994,24 +1027,24 @@ app/(main)/layout.tsx           ← MDI 레이아웃 (직접 수정 불필요)
 | 버튼·Input·테마                      | `@repo/ui` (`packages/ui`)                 |
 | Orval 생성 API·axios                 | `@repo/api-client`                         |
 | QueryClient·queryKeys                | `@repo/query`                              |
-| debounce 등 순수 유틸 hook           | `src/shared/lib/`                          |
+| debounce 등 순수 유틸 hook           | `src/shared/lib/` (camelCase 파일명)       |
 
 **notice 목록 API 연동 예 (추가 시 권장 구조)**
 
 ```
 src/entities/notice/
   model/types.ts
-  ui/notice-row.tsx
+  ui/NoticeRow.tsx
   index.ts
 
-src/features/notice-list/
-  api/get-notices.ts          # Orval 래핑
-  model/use-notice-list.ts
-  ui/notice-list.tsx
+src/features/noticeList/
+  api/getNotices.ts           # Orval 래핑
+  model/useNoticeList.ts
+  ui/NoticeList.tsx
   index.ts
 
 src/screens/notice/
-  ui/notice-page.tsx          # <NoticeList /> 조립만
+  ui/NoticePage.tsx           # <NoticeList /> 조립만
 ```
 
 ---
