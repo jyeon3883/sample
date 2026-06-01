@@ -6,6 +6,7 @@ import { EChart, type EChartsOption } from "@repo/ui/chart";
 import { QCELLGrid, type QCELLGridRef } from "@repo/ui/qcell";
 import { PublicEndpointPanel } from "@/features/api-playground";
 import { DemoFormPanel } from "@/features/demo-form";
+import { ZodDemoPanel } from "@/features/zod-demo";
 
 const qcellObjProperty = {
   id: "qcell-demo",
@@ -65,6 +66,7 @@ export function DemoDashboard() {
           <Tab label="API 예제" />
           <Tab label="그리드 예제" />
           <Tab label="차트 예제" />
+          <Tab label="Zod 예제" />
         </Tabs>
       </div>
 
@@ -100,6 +102,10 @@ export function DemoDashboard() {
         <div style={{ border: "1px solid #e4e4e7", borderRadius: "8px", padding: "0.75rem" }}>
           <EChart option={chartOption} height={360} />
         </div>
+      </TabPanel>
+
+      <TabPanel value={tab} index={4}>
+        <ZodDemoPanel />
       </TabPanel>
     </>
   );
