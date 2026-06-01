@@ -17,7 +17,13 @@
     "./molecules": "./src/molecules/index.ts",
     "./molecules/search-input": "./src/molecules/search-input.tsx",
     "./molecules/labeled-select": "./src/molecules/labeled-select.tsx",
-    "./molecules/tab-panel": "./src/molecules/tab-panel.tsx"
+    "./molecules/tab-panel": "./src/molecules/tab-panel.tsx",
+    "./layout": "./src/layout/index.ts",
+    "./layout/app-shell": "./src/layout/app-shell.tsx",
+    "./layout/page-container": "./src/layout/page-container.tsx",
+    "./layout/login-layout": "./src/layout/login-layout.tsx",
+    "./layout/base-layout": "./src/layout/base-layout.tsx",
+    "./layout/mdi": "./src/layout/mdi/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
@@ -43,6 +49,7 @@
   "peerDependencies": {
     "@emotion/react": "^11.11.0",
     "@emotion/styled": "^11.11.0",
+    "@mui/icons-material": "^7.3.11",
     "@mui/material": "^7.3.11",
     "react": "^19.2.1"
   },
