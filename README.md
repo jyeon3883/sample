@@ -24,6 +24,7 @@
 | **폼**              | @hookform/resolvers          | `^5.4.0`    |
 | **차트**            | ECharts                      | `^6.1.0`    |
 | **차트**            | echarts-for-react            | `^3.0.6`    |
+| **클라이언트 상태** | Zustand                      | `^5.0.14`   |
 | **스토리북**        | Storybook                    | `10.4.1`    |
 | **언어**            | TypeScript                   | `^5.8.3`    |
 | **린터**            | ESLint                       | `^9.28.0`   |
@@ -572,6 +573,191 @@ const { register, handleSubmit, formState: { errors } } = useForm<UserFormValues
 packages/types/src/schemas/
 ├── common.ts     ← 페이지네이션 등 공통 스키마
 └── {domain}.ts   ← 도메인별 스키마 추가
+```
+
+---
+
+## Zustand — 클라이언트 상태 관리
+
+> 참조: [https://zustand.docs.pmnd.rs/](https://zustand.docs.pmnd.rs/)
+
+### 개요
+
+Zustand는 경량 전역 상태 관리 라이브러리입니다.  
+Redux처럼 보일러플레이트가 많지 않고, Context처럼 불필요한 리렌더링이 발생하지 않습니다.
+
+```
+useState / useReducer  →  컴포넌트 로컬 상태
+React Context          →  리렌더링 범위 조절이 어렵고 성능 최적화 복잡
+Zustand                →  전역 상태, selector로 필요한 값만 구독 → 리렌더링 최소화
+```
+
+### 두 가지 패턴 비교
+
+| 구분 | Volatile (일반 스토어) | Persistent (persist 미들웨어) |
+| ---- | ---------------------- | ----------------------------- |
+| 저장 위치 | 브라우저 메모리 | `localStorage` |
+| 새로고침 후 | 초기값으로 리셋 | 마지막 값 그대로 복원 |
+| 적합한 데이터 | UI 상태, 임시 필터, 모달 개폐 여부 | 사용자 설정, 테마, 언어 등 |
+
+---
+
+### 패턴 1 — Volatile Store (리로드 시 초기화)
+
+페이지를 새로고침하면 초기값으로 돌아가는 일반 스토어입니다.
+
+**스토어 정의** `src/features/zustand-demo/model/volatile-store.ts`
+
+```ts
+import { create } from "zustand";
+
+interface VolatileState {
+  count: number;
+  message: string;
+  increment: () => void;
+  decrement: () => void;
+  reset: () => void;
+  setMessage: (msg: string) => void;
+}
+
+export const useVolatileStore = create<VolatileState>((set) => ({
+  count: 0,
+  message: "",
+  increment: () => set((s) => ({ count: s.count + 1 })),
+  decrement: () => set((s) => ({ count: s.count - 1 })),
+  reset: () => set({ count: 0, message: "" }),
+  setMessage: (msg) => set({ message: msg }),
+}));
+```
+
+**컴포넌트에서 사용**
+
+```tsx
+"use client";
+
+import { useVolatileStore } from "../model/volatile-store";
+
+export function VolatilePanel() {
+  // selector로 필요한 값만 구독 → 해당 값이 변경될 때만 리렌더링
+  const count = useVolatileStore((s) => s.count);
+  const increment = useVolatileStore((s) => s.increment);
+
+  return (
+    <div>
+      <p>카운트: {count}</p>
+      <button onClick={increment}>증가</button>
+    </div>
+  );
+}
+```
+
+> 페이지를 새로고침하면 `count`가 0으로, `message`가 `""`로 초기화됩니다.
+
+---
+
+### 패턴 2 — Persistent Store (리로드 후 유지)
+
+`persist` 미들웨어를 사용해 상태를 `localStorage`에 자동으로 직렬화·역직렬화합니다.
+
+**스토어 정의** `src/features/zustand-demo/model/persistent-store.ts`
+
+```ts
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+
+interface PersistentState {
+  count: number;
+  message: string;
+  increment: () => void;
+  decrement: () => void;
+  reset: () => void;
+  setMessage: (msg: string) => void;
+}
+
+export const usePersistentStore = create<PersistentState>()(
+  persist(
+    (set) => ({
+      count: 0,
+      message: "",
+      increment: () => set((s) => ({ count: s.count + 1 })),
+      decrement: () => set((s) => ({ count: s.count - 1 })),
+      reset: () => set({ count: 0, message: "" }),
+      setMessage: (msg) => set({ message: msg }),
+    }),
+    { name: "zustand-demo-persistent" }, // localStorage 키 이름
+  ),
+);
+```
+
+**컴포넌트에서 사용**
+
+```tsx
+"use client";
+
+import { usePersistentStore } from "../model/persistent-store";
+
+export function PersistentPanel() {
+  const count = usePersistentStore((s) => s.count);
+  const increment = usePersistentStore((s) => s.increment);
+
+  return (
+    <div>
+      <p>카운트: {count}</p>
+      <button onClick={increment}>증가</button>
+    </div>
+  );
+}
+```
+
+> 페이지를 새로고침해도 마지막 `count`와 `message` 값이 그대로 유지됩니다.  
+> 브라우저 DevTools → Application → Local Storage → `zustand-demo-persistent` 키에서 저장된 JSON을 직접 확인할 수 있습니다.
+
+---
+
+### persist 미들웨어 주요 옵션
+
+```ts
+persist(stateCreator, {
+  name: "my-store",              // localStorage 키 이름 (필수)
+  storage: createJSONStorage(() => sessionStorage), // 기본값: localStorage
+  partialize: (state) => ({      // 저장할 필드만 선택 (나머지는 메모리에만 유지)
+    count: state.count,
+  }),
+  version: 1,                    // 스키마 버전 관리 (migrate 옵션과 함께 사용)
+})
+```
+
+### FSD 위치 기준
+
+| 범위 | 위치 |
+| ---- | ---- |
+| 특정 feature에서만 쓰는 스토어 | `src/features/{name}/model/use-{name}-store.ts` |
+| 여러 feature에서 공유하는 전역 스토어 | `src/shared/model/use-{name}-store.ts` |
+
+외부에서는 항상 `index.ts`를 통해서만 접근합니다.
+
+```ts
+// ✅ 권장
+import { useVolatileStore } from "@/features/zustand-demo";
+
+// ❌ 내부 파일 직접 접근 금지
+import { useVolatileStore } from "@/features/zustand-demo/model/volatile-store";
+```
+
+### 데모 확인
+
+홈 화면 → **DemoDashboard** → **"Zustand 예제"** 탭에서 두 패턴을 직접 비교할 수 있습니다.
+
+```
+src/features/zustand-demo/
+├── index.ts
+├── model/
+│   ├── volatile-store.ts       ← create() 만 사용
+│   └── persistent-store.ts    ← persist() 미들웨어 적용
+└── ui/
+    ├── zustand-demo-panel.tsx  ← 탭 컨테이너
+    ├── volatile-panel.tsx      ← 리로드 시 초기화 예제
+    └── persistent-panel.tsx   ← 리로드 후 유지 예제
 ```
 
 ---

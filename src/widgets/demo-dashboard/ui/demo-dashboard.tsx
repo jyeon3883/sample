@@ -7,6 +7,7 @@ import { QCELLGrid, type QCELLGridRef } from "@repo/ui/qcell";
 import { PublicEndpointPanel } from "@/features/api-playground";
 import { DemoFormPanel } from "@/features/demo-form";
 import { ZodDemoPanel } from "@/features/zod-demo";
+import { ZustandDemoPanel } from "@/features/zustand-demo";
 
 const qcellObjProperty = {
   id: "qcell-demo",
@@ -67,6 +68,7 @@ export function DemoDashboard() {
           <Tab label="그리드 예제" />
           <Tab label="차트 예제" />
           <Tab label="Zod 예제" />
+          <Tab label="Zustand 예제" />
         </Tabs>
       </div>
 
@@ -106,6 +108,10 @@ export function DemoDashboard() {
 
       <TabPanel value={tab} index={4}>
         <ZodDemoPanel />
+      </TabPanel>
+
+      <TabPanel value={tab} index={5}>
+        <ZustandDemoPanel />
       </TabPanel>
     </>
   );
