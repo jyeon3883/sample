@@ -2,6 +2,32 @@
 
 단일 Next.js 앱 + 공유 패키지 monorepo (React **19.2.1**, Next **16.1.0**)
 
+## 주요 라이브러리 버전
+
+| 분류 | 라이브러리 | 버전 |
+|------|-----------|------|
+| **런타임** | Node.js | `>=20` |
+| **패키지 매니저** | pnpm | `10.26.1` |
+| **빌드** | Turbo | `^2.8.0` |
+| **프레임워크** | Next.js | `16.1.0` |
+| **UI** | React | `19.2.1` |
+| **UI** | React DOM | `19.2.1` |
+| **UI 컴포넌트** | MUI (Material UI) | `^7.3.11` |
+| **UI 컴포넌트** | MUI Icons | `^7.3.11` |
+| **스타일** | Emotion React | `^11.14.0` |
+| **스타일** | Emotion Styled | `^11.14.1` |
+| **서버 상태** | TanStack Query (React Query) | `^5.100.14` |
+| **HTTP 클라이언트** | Axios | `^1.16.1` |
+| **코드 생성** | Orval | `^8.12.3` |
+| **차트** | ECharts | `^6.1.0` |
+| **차트** | echarts-for-react | `^3.0.6` |
+| **스토리북** | Storybook | `10.4.1` |
+| **언어** | TypeScript | `^5.8.3` |
+| **린터** | ESLint | `^9.28.0` |
+| **포매터** | Prettier | `^3.8.3` |
+
+---
+
 ## md 파일 뷰어
 MarkMaid View
 
@@ -10,6 +36,107 @@ npm install -g pnpm@latest-11
 
 pnpm 설치후
 pnpm i or pnpm install
+
+---
+
+## 권장 VSCode 확장 프로그램
+
+VSCode 확장 프로그램 탭에서 아래 항목들을 검색하여 설치합니다.
+
+| 확장 ID | 이름 | 설명 |
+|---------|------|------|
+| `dbaeumer.vscode-eslint` | ESLint | JS/TS 린팅 규칙 적용 |
+| `esbenp.prettier-vscode` | Prettier | 코드 자동 포매팅 |
+| `eamodio.gitlens` | GitLens | Git blame, 히스토리, 브랜치 등 강력한 Git 시각화 |
+| `usernamehw.errorlens` | Error Lens | 에러/경고를 해당 코드 줄에 인라인으로 표시 |
+
+---
+
+## ESLint / Prettier 설정
+
+### 1. 확장 프로그램 설치
+
+VSCode 확장 프로그램 탭에서 아래 두 가지를 검색하여 설치합니다.
+
+- `dbaeumer.vscode-eslint` — ESLint
+- `esbenp.prettier-vscode` — Prettier
+
+### 2. 패키지 설치
+
+프로젝트 루트에서 실행합니다.
+
+```bash
+pnpm add -D prettier eslint-config-prettier
+```
+
+### 3. `.prettierrc` 생성 (프로젝트 루트)
+
+```json
+{
+  "semi": true,
+  "singleQuote": false,
+  "tabWidth": 2,
+  "trailingComma": "es5",
+  "printWidth": 100,
+  "endOfLine": "lf"
+}
+```
+
+### 4. `eslint.config.mjs` 수정
+
+`eslint-config-prettier`를 가장 마지막에 추가해야 Prettier와 충돌하는 ESLint 규칙이 비활성화됩니다.
+
+```js
+import { defineConfig, globalIgnores } from "eslint/config";
+import nextVitals from "eslint-config-next/core-web-vitals";
+import nextTs from "eslint-config-next/typescript";
+import prettier from "eslint-config-prettier";
+
+const eslintConfig = defineConfig([
+  ...nextVitals,
+  ...nextTs,
+  prettier,           // ← 반드시 마지막에 위치
+  globalIgnores([
+    ".next/**",
+    "out/**",
+    "build/**",
+    "next-env.d.ts",
+    "node_modules/**",
+    "packages/**/node_modules/**",
+    "packages/ui/storybook-static/**",
+    "**/*.tsbuildinfo",
+  ]),
+]);
+
+export default eslintConfig;
+```
+
+### 5. `.vscode/settings.json` 생성 (프로젝트 루트)
+
+```json
+{
+  "eslint.useFlatConfig": true,
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact"
+  ],
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "[javascript]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[javascriptreact]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[typescript]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[typescriptreact]": { "editor.defaultFormatter": "esbenp.prettier-vscode" }
+}
+```
+
+> 설정 후 VSCode를 재시작하거나 `Ctrl+Shift+P` → **ESLint: Restart ESLint Server** 를 실행합니다.
+
+---
 
 ## 폴더 구조 (단일 서비스용)
 
@@ -243,12 +370,12 @@ src/screens/notice/
 ## 시작하기
 
 ```powershell
-cd C:\work\next-tanstack-monorepo
 corepack enable
 corepack prepare pnpm@10.26.1 --activate
 pnpm install
 pnpm dev
 ```
+
 
 ## 스크립트
 
