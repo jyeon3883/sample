@@ -19,6 +19,9 @@
 | **서버 상태**       | TanStack Query (React Query) | `^5.100.14` |
 | **HTTP 클라이언트** | Axios                        | `^1.16.1`   |
 | **코드 생성**       | Orval                        | `^8.12.3`   |
+| **스키마 검증**     | Zod                          | `^4.4.3`    |
+| **폼**              | React Hook Form              | `^7.77.0`   |
+| **폼**              | @hookform/resolvers          | `^5.4.0`    |
 | **차트**            | ECharts                      | `^6.1.0`    |
 | **차트**            | echarts-for-react            | `^3.0.6`    |
 | **스토리북**        | Storybook                    | `10.4.1`    |
@@ -479,6 +482,97 @@ export function NoticePage() {
 | `api/*.ts`        | API 호출 함수        | Orval 생성 함수 래핑                      |
 | `lib/*.ts`        | slice 내부 전용 유틸 | 외부에서 import 금지                      |
 | `index.ts`        | 외부 공개 API        | 여기서만 export, 내부 파일 직접 접근 금지 |
+
+---
+
+## Zod — 런타임 스키마 검증
+
+> 참조: [https://zod.dev/](https://zod.dev/)
+
+### 개요
+
+Zod는 TypeScript-first 스키마 선언 및 런타임 검증 라이브러리입니다.  
+TypeScript 타입은 컴파일 타임에만 동작하지만, Zod 스키마는 **런타임에서도 실제 데이터를 검증**합니다.
+
+```
+TypeScript 타입  →  컴파일 타임 안전성
+Zod 스키마      →  런타임 안전성 + 타입 자동 추론
+```
+
+### 설치 위치
+
+이 모노레포에서 `zod`는 `@repo/types` 패키지에서 관리합니다.  
+루트 앱과 다른 패키지는 `zod`를 직접 의존하지 않고 `@repo/types`를 통해 사용합니다.
+
+```ts
+// ✅ 권장 — @repo/types를 통해 사용
+import { z } from "@repo/types";
+
+// ❌ 비권장 — 직접 참조 시 버전 분산 위험
+import { z } from "zod";
+```
+
+### 주요 사용처
+
+#### 1. 조회 — API 응답 런타임 검증
+
+Orval이 생성한 타입은 컴파일 타임 전용입니다.  
+실제 API 응답이 스키마와 다를 경우를 대비해 `safeParse`로 런타임 검증을 추가할 수 있습니다.
+
+```ts
+import { z } from "@repo/types";
+
+const UserSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  email: z.string().email(),
+  role: z.enum(["Admin", "Editor", "Viewer"]),
+  active: z.boolean(),
+});
+
+// safeParse: 실패해도 예외를 던지지 않음
+const result = UserSchema.safeParse(apiResponse);
+
+if (result.success) {
+  console.log(result.data); // 타입 안전한 데이터
+} else {
+  console.error(result.error.issues); // 오류 상세 목록
+}
+```
+
+#### 2. 등록/수정 — 폼 유효성 검사
+
+`react-hook-form`의 `zodResolver`와 조합하면 스키마 하나로 **타입 추론 + 폼 검증**을 동시에 처리합니다.
+
+```ts
+import { z } from "@repo/types";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+const UserFormSchema = z.object({
+  name: z.string().min(1, "이름을 입력해주세요.").max(20),
+  email: z.string().email("올바른 이메일 형식이 아닙니다."),
+  role: z.enum(["Admin", "Editor", "Viewer"]),
+});
+
+type UserFormValues = z.infer<typeof UserFormSchema>; // 타입 자동 추론
+
+const { register, handleSubmit, formState: { errors } } = useForm<UserFormValues>({
+  resolver: zodResolver(UserFormSchema),
+});
+```
+
+### 스키마 관리 원칙
+
+- 공통으로 재사용되는 스키마는 `@repo/types/src/schemas/` 하위에 도메인별 파일로 관리합니다.
+- 특정 feature에서만 사용하는 스키마는 해당 feature 내부 파일에서 정의합니다.
+- `z.infer<typeof Schema>`로 타입을 추론해 별도 `type` 선언을 최소화합니다.
+
+```
+packages/types/src/schemas/
+├── common.ts     ← 페이지네이션 등 공통 스키마
+└── {domain}.ts   ← 도메인별 스키마 추가
+```
 
 ---
 
