@@ -1,6 +1,6 @@
 "use client";
 
-import { useMdiTabStore } from "./useMdiTabStore";
+import { useMdiTabStore } from "./MdiTabContext";
 
 /**
  * 탭별 상태를 Zustand 스토어에 저장하는 훅.

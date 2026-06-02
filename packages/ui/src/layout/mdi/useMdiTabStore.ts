@@ -1,4 +1,4 @@
-import { create } from "zustand";
+import { createStore } from "zustand/vanilla";
 import { persist } from "zustand/middleware";
 
 export interface MdiTabMeta {
@@ -6,7 +6,7 @@ export interface MdiTabMeta {
   label: string;
 }
 
-interface MdiTabStoreState {
+export interface MdiTabStoreState {
   tabsMeta: MdiTabMeta[];
   activeId: string | null;
   /** LRU 순서: 앞(index 0) = 가장 오래된, 뒤(마지막) = 가장 최근 */
@@ -22,56 +22,60 @@ interface MdiTabStoreState {
   removeTabState: (tabId: string) => void;
 }
 
-export const useMdiTabStore = create<MdiTabStoreState>()(
-  persist(
-    (set) => ({
-      tabsMeta: [],
-      activeId: null,
-      mountedIds: [],
-      tabStates: {},
+export type MdiTabStore = ReturnType<typeof createMdiTabStore>;
 
-      addTabMeta: (meta) =>
-        set((s) => {
-          if (s.tabsMeta.some((t) => t.id === meta.id)) return s;
-          return { tabsMeta: [...s.tabsMeta, meta] };
-        }),
+export function createMdiTabStore(storageKey: string) {
+  return createStore<MdiTabStoreState>()(
+    persist(
+      (set) => ({
+        tabsMeta: [],
+        activeId: null,
+        mountedIds: [],
+        tabStates: {},
 
-      removeTabMeta: (id) =>
-        set((s) => ({
-          tabsMeta: s.tabsMeta.filter((t) => t.id !== id),
-        })),
+        addTabMeta: (meta) =>
+          set((s) => {
+            if (s.tabsMeta.some((t) => t.id === meta.id)) return s;
+            return { tabsMeta: [...s.tabsMeta, meta] };
+          }),
 
-      setActiveId: (id) => set({ activeId: id }),
+        removeTabMeta: (id) =>
+          set((s) => ({
+            tabsMeta: s.tabsMeta.filter((t) => t.id !== id),
+          })),
 
-      /** 활성 탭만 마운트: mountedIds를 [id] 단독으로 교체 */
-      activateMounted: (id) => set({ mountedIds: [id] }),
+        setActiveId: (id) => set({ activeId: id }),
 
-      removeMounted: (id) =>
-        set((s) => ({
-          mountedIds: s.mountedIds.filter((mid) => mid !== id),
-        })),
+        /** 활성 탭만 마운트: mountedIds를 [id] 단독으로 교체 */
+        activateMounted: (id) => set({ mountedIds: [id] }),
 
-      setTabState: (tabId, state) =>
-        set((s) => ({
-          tabStates: { ...s.tabStates, [tabId]: state },
-        })),
+        removeMounted: (id) =>
+          set((s) => ({
+            mountedIds: s.mountedIds.filter((mid) => mid !== id),
+          })),
 
-      removeTabState: (tabId) =>
-        set((s) => {
-          const next = { ...s.tabStates };
-          delete next[tabId];
-          return { tabStates: next };
-        }),
-    }),
-    {
-      name: "mdi-tabs",
-      skipHydration: true,
-      partialize: (s) => ({
-        tabsMeta: s.tabsMeta,
-        activeId: s.activeId,
-        mountedIds: s.mountedIds,
-        tabStates: s.tabStates,
+        setTabState: (tabId, state) =>
+          set((s) => ({
+            tabStates: { ...s.tabStates, [tabId]: state },
+          })),
+
+        removeTabState: (tabId) =>
+          set((s) => {
+            const next = { ...s.tabStates };
+            delete next[tabId];
+            return { tabStates: next };
+          }),
       }),
-    },
-  ),
-);
+      {
+        name: storageKey,
+        skipHydration: true,
+        partialize: (s) => ({
+          tabsMeta: s.tabsMeta,
+          activeId: s.activeId,
+          mountedIds: s.mountedIds,
+          tabStates: s.tabStates,
+        }),
+      },
+    ),
+  );
+}

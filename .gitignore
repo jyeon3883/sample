@@ -9,4 +9,5 @@ dist
 .DS_Store
 coverage
 storybook-static
+tsconfig.tsbuildinfo
 #packages/api-client/src/generated

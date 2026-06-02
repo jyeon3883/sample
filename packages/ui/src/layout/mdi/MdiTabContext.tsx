@@ -1,7 +1,12 @@
 "use client";
 
 import * as React from "react";
-import { useMdiTabStore } from "./useMdiTabStore";
+import { useStore } from "zustand";
+import {
+  createMdiTabStore,
+  type MdiTabStore,
+  type MdiTabStoreState,
+} from "./useMdiTabStore";
 
 export type MdiTab = {
   id: string;
@@ -45,12 +50,53 @@ type MdiTabContextValue = {
 };
 
 const MdiTabContext = React.createContext<MdiTabContextValue | null>(null);
+const MdiTabStoreContext = React.createContext<MdiTabStore | null>(null);
 
-export function MdiTabProvider({ children }: { children: React.ReactNode }) {
+type MdiPersistApi = {
+  rehydrate: () => void;
+  onFinishHydration: (callback: () => void) => () => void;
+  hasHydrated?: () => boolean;
+};
+
+function getPersistApi(store: MdiTabStore): MdiPersistApi | null {
+  const persistApi = (store as MdiTabStore & { persist?: MdiPersistApi }).persist;
+  return persistApi ?? null;
+}
+
+function useMdiTabStoreInternal(): MdiTabStore {
+  const store = React.useContext(MdiTabStoreContext);
+  if (!store) {
+    throw new Error("useMdiTabStore must be used inside MdiTabProvider");
+  }
+  return store;
+}
+
+export function useMdiTabStore<T>(selector: (state: MdiTabStoreState) => T): T {
+  const store = useMdiTabStoreInternal();
+  return useStore(store, selector);
+}
+
+export function useMdiTabStoreApi(): MdiTabStore {
+  return useMdiTabStoreInternal();
+}
+
+export function MdiTabProvider({
+  children,
+  storageKey = "mdi-tabs",
+}: {
+  children: React.ReactNode;
+  storageKey?: string;
+}) {
+  const storeRef = React.useRef<MdiTabStore | null>(null);
+  if (!storeRef.current) {
+    storeRef.current = createMdiTabStore(storageKey);
+  }
+  const store = storeRef.current;
+
   // 렌더링에 필요한 상태값만 구독 (actions는 getState()로 호출해 안정적)
-  const tabsMeta = useMdiTabStore((s) => s.tabsMeta);
-  const activeId = useMdiTabStore((s) => s.activeId);
-  const mountedIds = useMdiTabStore((s) => s.mountedIds);
+  const tabsMeta = useStore(store, (s) => s.tabsMeta);
+  const activeId = useStore(store, (s) => s.activeId);
+  const mountedIds = useStore(store, (s) => s.mountedIds);
 
   /**
    * component, onBeforeClose는 직렬화 불가이므로 메모리에만 보관.
@@ -61,8 +107,8 @@ export function MdiTabProvider({ children }: { children: React.ReactNode }) {
 
   // SSR hydration: 클라이언트 마운트 시 localStorage에서 복원
   React.useEffect(() => {
-    useMdiTabStore.persist.rehydrate();
-  }, []);
+    getPersistApi(store)?.rehydrate();
+  }, [store]);
 
   const openTab = React.useCallback(
     (
@@ -75,7 +121,7 @@ export function MdiTabProvider({ children }: { children: React.ReactNode }) {
       if (onBeforeClose) {
         closeCallbackRegistry.current.set(id, onBeforeClose);
       }
-      const s = useMdiTabStore.getState();
+      const s = store.getState();
       // 이미 존재하는 탭이면 activeId를 바꾸지 않음 (persist 복원 시 덮어쓰기 방지)
       const existed = s.tabsMeta.some((t) => t.id === id);
       s.addTabMeta({ id, label });
@@ -84,7 +130,7 @@ export function MdiTabProvider({ children }: { children: React.ReactNode }) {
       }
       s.activateMounted(id);
     },
-    [],
+    [store],
   );
 
   const restoreTab = React.useCallback(
@@ -112,7 +158,7 @@ export function MdiTabProvider({ children }: { children: React.ReactNode }) {
     componentRegistry.current.delete(id);
     closeCallbackRegistry.current.delete(id);
 
-    const s = useMdiTabStore.getState();
+    const s = store.getState();
     const { tabsMeta: meta, activeId: curActiveId } = s;
     const idx = meta.findIndex((t) => t.id === id);
     const next = meta.filter((t) => t.id !== id);
@@ -129,13 +175,13 @@ export function MdiTabProvider({ children }: { children: React.ReactNode }) {
         s.setActiveId(next[prevIdx]?.id ?? null);
       }
     }
-  }, []);
+  }, [store]);
 
   const activateTab = React.useCallback((id: string) => {
-    const s = useMdiTabStore.getState();
+    const s = store.getState();
     s.setActiveId(id);
     s.activateMounted(id);
-  }, []);
+  }, [store]);
 
   const registerCloseCallback = React.useCallback(
     (id: string, callback: NonNullable<MdiTab["onBeforeClose"]>) => {
@@ -179,7 +225,11 @@ export function MdiTabProvider({ children }: { children: React.ReactNode }) {
     [tabs, activeId, mountedIds, openTab, restoreTab, closeTab, activateTab, registerCloseCallback, unregisterCloseCallback],
   );
 
-  return <MdiTabContext.Provider value={value}>{children}</MdiTabContext.Provider>;
+  return (
+    <MdiTabStoreContext.Provider value={store}>
+      <MdiTabContext.Provider value={value}>{children}</MdiTabContext.Provider>
+    </MdiTabStoreContext.Provider>
+  );
 }
 
 export function useMdiTab(): MdiTabContextValue {

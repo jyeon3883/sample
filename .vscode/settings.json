@@ -23,5 +23,6 @@
   },
   "[typescriptreact]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
-  }
+  },
+  "yaml.maxItemsComputed": 10000
 }

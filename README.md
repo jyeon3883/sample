@@ -1,6 +1,6 @@
 # sample
 
-> 단일 Next.js 앱 + 공유 패키지 Monorepo (React **19.2.1**, Next **16.1.0**)
+> 멀티 Next.js 앱(`web`, `admin`) + 공유 패키지 Monorepo (React **19.2.1**, Next **16.1.0**)
 
 ---
 
@@ -16,8 +16,9 @@ Monorepo는 **하나의 Git 저장소 안에 여러 패키지**를 함께 관리
 ```
 일반 구조:          Monorepo 구조:
 my-app/             next-tanstack-monorepo/
-  src/                app/          ← Next.js 앱
-  package.json        src/          ← 앱 기능 코드 (FSD)
+  src/                apps/
+  package.json          web/        ← 사용자 서비스 앱
+                        admin/      ← 관리자 서비스 앱
                       packages/     ← 공유 라이브러리들
                         ui/         ← 공통 UI 컴포넌트
                         api-client/ ← API 호출 코드
@@ -26,8 +27,8 @@ my-app/             next-tanstack-monorepo/
 
 **장점:** 공통 코드(UI, API, 타입)를 한 곳에서 관리하고 여러 앱이 공유할 수 있습니다.
 
-이 프로젝트는 서비스가 하나이므로 `apps/web/` 같은 중첩 구조 없이 **루트 `app/`**을 바로 사용합니다.  
-나중에 서비스가 늘어나면 `apps/` 구조로 쉽게 전환할 수 있습니다.
+현재 프로젝트는 `apps/web`, `apps/admin` 두 개의 Next.js 앱을 사용합니다.  
+공통 코드(UI, API, Query, 타입)는 `packages/*`로 분리해 중복 없이 재사용합니다.
 
 ---
 
@@ -46,7 +47,8 @@ my-app/             next-tanstack-monorepo/
 11. [Zustand — 클라이언트 상태 관리](#11-zustand--클라이언트-상태-관리)
 12. [MDI 탭 시스템](#12-mdi-탭-시스템)
 13. [새 기능 넣을 때 체크리스트](#13-새-기능-넣을-때-체크리스트)
-14. [스크립트 목록](#14-스크립트)
+14. [환경 변수 (env) 규칙](#14-환경-변수-env-규칙)
+15. [스크립트 목록](#15-스크립트)
 
 ---
 
@@ -96,7 +98,14 @@ pnpm install
 pnpm dev
 ```
 
-브라우저에서 [http://localhost:3000](http://localhost:3000) 으로 접속하면 앱이 열립니다.
+`pnpm dev`는 `web(3000)` + `admin(3001)`을 함께 실행합니다.
+
+- web만 실행: `pnpm dev:web`
+- admin만 실행: `pnpm dev:admin`
+
+브라우저:
+- web: [http://localhost:3000](http://localhost:3000)
+- admin: [http://localhost:3001](http://localhost:3001)
 
 ### Step 6 — md 파일 뷰어
 
@@ -233,21 +242,19 @@ export default eslintConfig;
 
 ## 5. 폴더 구조
 
-`apps/` 없이 **루트가 Next 앱**, 공통 코드만 `packages/`에 둡니다.
+`apps/*`에 앱을 두고, 공통 코드는 `packages/*`로 분리합니다.
 
 ```
 next-tanstack-monorepo/
-├── app/                    # Next.js 라우트 (URL 경로 정의만 담당)
-│   ├── layout.tsx
-│   ├── page.tsx
-│   └── (board)/notice|qna/
-├── src/                    # 실제 기능 코드 (FSD 아키텍처)
-│   ├── application/        # 앱 전체 Provider 초기화 (MUI, Query 등)
-│   ├── screens/            # 각 URL에 대응하는 화면 조립
-│   ├── widgets/            # 여러 기능을 묶은 큰 UI 블록
-│   ├── features/           # 사용자가 하는 동작 단위
-│   ├── entities/           # 앱이 다루는 핵심 데이터(도메인) 타입/모델
-│   └── shared/             # 도메인 없는 순수 유틸 (라우트 상수 등)
+├── apps/
+│   ├── web/                # 사용자 앱 (Next.js)
+│   │   ├── app/            # 라우트
+│   │   ├── src/            # FSD
+│   │   └── .env.*          # web 런타임 환경변수
+│   └── admin/              # 관리자 앱 (Next.js)
+│       ├── app/            # 라우트
+│       ├── src/            # FSD
+│       └── .env.*          # admin 런타임 환경변수
 ├── public/
 ├── packages/               # 공유 라이브러리 (여러 앱이 함께 쓸 수 있는 코드)
 │   ├── api-client/         # Orval + Axios로 생성된 API 호출 코드
@@ -255,9 +262,9 @@ next-tanstack-monorepo/
 │   ├── ui/                 # MUI, ECharts, QCELL, Storybook
 │   ├── types/              # 공통 TypeScript 타입 및 Zod 스키마
 │   └── config-typescript/  # 공통 tsconfig 설정
-├── next.config.ts
 ├── package.json            # 루트 패키지 설정 (워크스페이스 루트)
 ├── pnpm-workspace.yaml     # pnpm 워크스페이스 패키지 목록
+├── .env.*                  # codegen 환경변수(ORVAL_OPENAPI_URL_MAIN)
 └── turbo.json              # Turborepo 빌드 파이프라인 설정
 ```
 
@@ -280,7 +287,7 @@ FSD는 이런 "스파게티 코드"를 방지하기 위해 **방향성 있는 �
 
 ```mermaid
 flowchart TD
-    nextApp["app/\n(Next.js 라우트 — URL만 담당)"]
+    nextApp["apps/*/app/\n(Next.js 라우트 — URL만 담당)"]
     screens["screens\n(화면 전체 조립)"]
     widgets["widgets\n(큰 UI 블록)"]
     features["features\n(사용자 동작 단위)"]
@@ -314,7 +321,7 @@ flowchart TD
 
 | 레이어             | 역할                                                                        | 이 프로젝트 예시                                            |
 | ------------------ | --------------------------------------------------------------------------- | ------------------------------------------------------- |
-| `app/` (Next.js)   | URL, `layout`, `metadata`. 비즈니스 로직 없음                               | `app/page.tsx` → `@/screens/home` re-export             |
+| `apps/*/app/` (Next.js) | URL, `layout`, `metadata`. 비즈니스 로직 없음                          | `apps/web/app/(main)/page.tsx` → `@/screens/home` re-export |
 | `src/application/` | FSD app 레이어 — Provider, 초기화                                           | `AppProviders` (MUI + Query + Theme)                    |
 | `src/screens/`     | **한 라우트 화면** 조립. FSD의 pages 레이어                                 | `home`, `notice`, `qna`                                 |
 | `src/widgets/`     | 여러 feature/entity를 묶은 **큰 UI 블록**                                   | `demoDashboard`, `boardNav`                             |
@@ -450,13 +457,13 @@ src/features/
 
 ### 1) Next 라우트 → screen (얇은 진입점)
 
-`app/` 폴더는 URL 경로만 담당하고, 실제 UI는 `screens`에 위임합니다.
+`apps/*/app/` 폴더는 URL 경로만 담당하고, 실제 UI는 `screens`에 위임합니다.
 
 ```tsx
-// app/page.tsx
+// apps/web/app/(main)/page.tsx
 export { HomePage as default } from "@/screens/home";
 
-// app/(board)/notice/page.tsx
+// apps/web/app/(main)/(board)/notice/page.tsx
 export { NoticePage as default } from "@/screens/notice";
 ```
 
@@ -952,17 +959,17 @@ src/features/zustandDemo/
 
 > **한 줄 요약:** 화면 전환 없이 여러 페이지를 브라우저 탭처럼 열어두는 UI 시스템입니다.
 >
-> 관련 파일: `packages/ui/src/layout/mdi/`, `src/shared/config/routes.ts`, `app/(main)/layout.tsx`
+> 관련 파일: `packages/ui/src/layout/mdi/`, `apps/web/src/shared/config/routes.ts`, `apps/*/app/(main)/layout.tsx`
 
 탭 목록과 활성 탭은 `localStorage`에 자동 저장되어 **새로고침 후에도 복원**됩니다.
 
 ### 새 페이지를 탭으로 추가하는 방법
 
-`src/shared/config/routes.ts` 의 `TAB_ROUTES` 에만 항목을 추가하면 됩니다.  
-`app/(main)/layout.tsx` 는 수정하지 않아도 자동으로 반영됩니다.
+각 앱의 `src/shared/config/routes.ts` 에 있는 `TAB_ROUTES` 에만 항목을 추가하면 됩니다.  
+`apps/*/app/(main)/layout.tsx`는 공통 `MdiWorkspaceLayout`을 사용하므로 보통 수정이 필요 없습니다.
 
 ```ts
-// src/shared/config/routes.ts
+// apps/web/src/shared/config/routes.ts (web 예시)
 export const TAB_ROUTES: Record<string, TabRouteConfig> = {
   // 기존 항목들 ...
 
@@ -1152,15 +1159,22 @@ export function NoticePage() {
 ```
 packages/ui/src/layout/mdi/
 ├── index.ts                  ← public API (export 목록)
+├── MdiWorkspaceLayout.tsx    ← 공통 MDI 오케스트레이션
 ├── MdiTabContext.tsx          ← Context + openTab / closeTab / activateTab
 ├── MdiTabBar.tsx              ← 탭 바 UI
 ├── MdiTabPanel.tsx            ← 탭 패널 (활성 탭만 마운트)
-├── useMdiTabStore.ts          ← Zustand persist 스토어 (탭 목록, activeId)
+├── useMdiTabStore.ts          ← Zustand persist 스토어 팩토리
 ├── useTabState.ts             ← useTabState 훅
 └── useRegisterTabClose.ts    ← useRegisterTabClose 훅
 
-src/shared/config/routes.ts   ← TAB_ROUTES (새 탭 등록은 여기만 수정)
-app/(main)/layout.tsx          ← MDI 레이아웃 (직접 수정 불필요)
+packages/ui/src/layout/navigation/
+├── CommonHeader.tsx          ← 공통 헤더 UI
+└── CommonSidebar.tsx         ← 공통 사이드바 UI
+
+apps/web/src/shared/config/routes.ts   ← web 탭 라우트
+apps/admin/src/shared/config/routes.ts ← admin 탭 라우트
+apps/web/app/(main)/layout.tsx         ← web MDI 어댑터 (storageKey: mdi-tabs-web)
+apps/admin/app/(main)/layout.tsx       ← admin MDI 어댑터 (storageKey: mdi-tabs-admin)
 ```
 
 ---
@@ -1178,7 +1192,7 @@ flowchart TD
     q4{Notice·User 같은\n데이터 개념인가?}
     q5{여러 앱이 공유하는\n공통 컴포넌트인가?}
 
-    answerScreen["app/.../page.tsx\n+ src/screens/name/"]
+    answerScreen["apps/*/app/.../page.tsx\n+ src/screens/name/"]
     answerWidget["src/widgets/name/"]
     answerFeature["src/features/name/"]
     answerEntity["src/entities/name/"]
@@ -1206,7 +1220,7 @@ flowchart TD
 
 | 질문                                 | 넣을 곳                                    |
 | ------------------------------------ | ------------------------------------------ |
-| 새 URL 화면인가?                     | `app/.../page.tsx` + `src/screens/<name>/` |
+| 새 URL 화면인가?                     | `apps/*/app/.../page.tsx` + `src/screens/<name>/` |
 | 여러 feature를 한 블록으로 묶나?     | `src/widgets/<name>/`                      |
 | 사용자 액션(로그인, 필터, 제출)인가? | `src/features/<name>/`                     |
 | Notice, User 같은 **개념**인가?      | `src/entities/<name>/`                     |
@@ -1235,33 +1249,80 @@ src/screens/notice/
 
 ---
 
-## app/ vs src/ — Next colocation
+## apps/*/app vs src/ — Next colocation
 
 | 패턴                                        | FSD에서                                    |
 | ------------------------------------------- | ------------------------------------------ |
-| `app/_components`, `app/_hooks`, `app/_lib` | 사용하지 않음 (비어 있으면 삭제)           |
+| `apps/*/app/_components`, `apps/*/app/_hooks`, `apps/*/app/_lib` | 사용하지 않음 (비어 있으면 삭제) |
 | 라우트 전용 코드                            | `screens` / `features` / `entities`로 이동 |
 
 ---
 
-## 왜 `apps/web/app` 대신 루트 `app/`?
+## 왜 `apps/*` 구조를 사용하나요?
 
-| 구조               | 적합한 경우                                |
-| ------------------ | ------------------------------------------ |
-| `apps/web/app/...` | web, admin, api 등 **배포 단위가 여러 개** |
-| `app/...` (루트)   | **서비스 1개** + 코드만 패키지로 분리      |
+| 구조                | 적합한 경우                                 |
+| ------------------- | ------------------------------------------- |
+| `apps/web`, `apps/admin` | 서비스/도메인/권한 단위로 앱이 분리되는 경우 |
+| 루트 `app/...` 단일 앱   | 앱이 하나이고 배포 단위도 하나인 경우         |
 
-지금처럼 서비스가 하나면 루트 `app/`이 경로도 짧고 설정도 단순합니다. Monorepo 이점(공유 패키지, Orval, Query 설정 분리)은 그대로 유지됩니다.
+현재는 `web`과 `admin`을 분리 운영하고 있어 `apps/*` 구조가 더 적합합니다.  
+공통 코드는 `packages/*`로 모아 중복을 줄이고, 앱별 라우팅/화면은 각 앱에서 독립적으로 관리합니다.
 
 ---
 
-## 14. 스크립트
+## 14. 환경 변수 (env) 규칙
+
+런타임 env와 codegen env를 분리해 관리합니다.
+
+### 포트 관리 규칙
+
+이 프로젝트는 앱 개발 포트를 **env가 아니라 각 앱의 `package.json` 스크립트에서 기본값으로 관리**합니다.
+
+- web: `localhost:3000` (기본 Next 포트)
+- admin: `localhost:3001` (`--port 3001` 명시)
+
+기본값은 고정해 두고, 필요할 때만 실행 시점에 포트를 override 하는 방식을 권장합니다.
+
+```bash
+# web 포트를 임시 변경
+pnpm --filter @repo/web dev -- --port 3100
+
+# admin 포트를 임시 변경
+pnpm --filter @repo/admin dev -- --port 3101
+```
+
+> 언제 env로 포트를 관리하나요?
+>
+> - 개인 개발 환경/CI에서 포트가 자주 달라져야 할 때만 `PORT`를 추가해 사용합니다.
+> - 팀 기본 개발 흐름에서는 현재처럼 스크립트 고정값을 유지하는 편이 충돌과 혼선을 줄입니다.
+
+### 앱 런타임 env
+
+- `apps/web/.env.*`: web 앱 런타임 (`NEXT_PUBLIC_API_URL`)
+- `apps/admin/.env.*`: admin 앱 런타임 (`NEXT_PUBLIC_API_URL`)
+
+### 루트 env (codegen 전용)
+
+- 루트 `.env.*`: `pnpm codegen` 시 `ORVAL_OPENAPI_URL_MAIN` 로 사용
+- 로딩 위치: `packages/api-client/orval.config.ts` (`rootDir` 기준)
+
+---
+
+## 15. 스크립트
 
 | 명령             | 설명                         |
 | ---------------- | ---------------------------- |
-| `pnpm dev`       | 개발 서버 (localhost:3000)   |
-| `pnpm build`     | Next 프로덕션 빌드           |
-| `pnpm lint`      | ESLint (`eslint.config.mjs`) |
-| `pnpm codegen`   | Orval API 클라이언트 생성    |
-| `pnpm typecheck` | 루트 + packages 타입 검사    |
+| `pnpm dev`       | web(3000) + admin(3001) 동시 실행 |
+| `pnpm dev:web`   | web 앱만 실행 (localhost:3000) |
+| `pnpm dev:admin` | admin 앱만 실행 (localhost:3001) |
+| `pnpm build`     | 전체 워크스페이스 빌드(turbo) |
+| `pnpm build:web` | web 앱만 빌드 |
+| `pnpm build:admin` | admin 앱만 빌드 |
+| `pnpm lint`      | 전체 워크스페이스 lint(turbo) |
+| `pnpm lint:web`  | web 앱 lint |
+| `pnpm lint:admin` | admin 앱 lint |
+| `pnpm typecheck` | 전체 워크스페이스 타입 검사(turbo) |
+| `pnpm typecheck:web` | web 앱 타입 검사 |
+| `pnpm typecheck:admin` | admin 앱 타입 검사 |
 | `pnpm storybook` | 스토리북 (localhost:6006)    |
+| `pnpm codegen`   | Orval API 클라이언트 생성    |
