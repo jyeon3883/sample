@@ -1,53 +1,142 @@
-# next-tanstack-monorepo
+# sample
 
-단일 Next.js 앱 + 공유 패키지 monorepo (React **19.2.1**, Next **16.1.0**)
-
-## 주요 라이브러리 버전
-
-| 분류                | 라이브러리                   | 버전        |
-| ------------------- | ---------------------------- | ----------- |
-| **런타임**          | Node.js                      | `>=20`      |
-| **패키지 매니저**   | pnpm                         | `10.26.1`   |
-| **빌드**            | Turbo                        | `^2.8.0`    |
-| **프레임워크**      | Next.js                      | `16.1.0`    |
-| **UI**              | React                        | `19.2.1`    |
-| **UI**              | React DOM                    | `19.2.1`    |
-| **UI 컴포넌트**     | MUI (Material UI)            | `^7.3.11`   |
-| **UI 컴포넌트**     | MUI Icons                    | `^7.3.11`   |
-| **스타일**          | Emotion React                | `^11.14.0`  |
-| **스타일**          | Emotion Styled               | `^11.14.1`  |
-| **서버 상태**       | TanStack Query (React Query) | `^5.100.14` |
-| **HTTP 클라이언트** | Axios                        | `^1.16.1`   |
-| **코드 생성**       | Orval                        | `^8.12.3`   |
-| **스키마 검증**     | Zod                          | `^4.4.3`    |
-| **폼**              | React Hook Form              | `^7.77.0`   |
-| **폼**              | @hookform/resolvers          | `^5.4.0`    |
-| **차트**            | ECharts                      | `^6.1.0`    |
-| **차트**            | echarts-for-react            | `^3.0.6`    |
-| **클라이언트 상태** | Zustand                      | `^5.0.14`   |
-| **스토리북**        | Storybook                    | `10.4.1`    |
-| **언어**            | TypeScript                   | `^5.8.3`    |
-| **린터**            | ESLint                       | `^9.28.0`   |
-| **포매터**          | Prettier                     | `^3.8.3`    |
+> 단일 Next.js 앱 + 공유 패키지 Monorepo (React **19.2.1**, Next **16.1.0**)
 
 ---
 
-## md 파일 뷰어
+## 이 프로젝트는 무엇인가요?
 
-MarkMaid View
+이 프로젝트는 **Monorepo** 구조로 만들어진 Next.js 웹 애플리케이션입니다.
 
-## pnpm 설치
+### Monorepo란?
 
+일반적인 프로젝트는 앱 코드 하나가 하나의 Git 저장소에 있습니다.  
+Monorepo는 **하나의 Git 저장소 안에 여러 패키지**를 함께 관리하는 방식입니다.
+
+```
+일반 구조:          Monorepo 구조:
+my-app/             next-tanstack-monorepo/
+  src/                app/          ← Next.js 앱
+  package.json        src/          ← 앱 기능 코드 (FSD)
+                      packages/     ← 공유 라이브러리들
+                        ui/         ← 공통 UI 컴포넌트
+                        api-client/ ← API 호출 코드
+                        query/      ← 서버 상태 설정
+```
+
+**장점:** 공통 코드(UI, API, 타입)를 한 곳에서 관리하고 여러 앱이 공유할 수 있습니다.
+
+이 프로젝트는 서비스가 하나이므로 `apps/web/` 같은 중첩 구조 없이 **루트 `app/`**을 바로 사용합니다.  
+나중에 서비스가 늘어나면 `apps/` 구조로 쉽게 전환할 수 있습니다.
+
+---
+
+## 목차
+
+1. [처음 시작하기 (온보딩 체크리스트)](#1-처음-시작하기-온보딩-체크리스트)
+2. [주요 라이브러리 버전](#2-주요-라이브러리-버전)
+3. [권장 VSCode 확장 프로그램](#3-권장-vscode-확장-프로그램)
+4. [ESLint / Prettier 설정](#4-eslint--prettier-설정)
+5. [폴더 구조](#5-폴더-구조)
+6. [FSD 아키텍처 이해하기](#6-fsd-아키텍처-이해하기)
+7. [명명 규칙](#7-명명-규칙-naming-convention)
+8. [코드 연결 흐름 예제](#8-예제-지금-코드가-어떻게-연결되는지)
+9. [실전 샘플: 공지사항 기능 만들기](#9-실전-샘플-공지사항-기능을-처음부터-만든다면)
+10. [Zod — 런타임 스키마 검증](#10-zod--런타임-스키마-검증)
+11. [Zustand — 클라이언트 상태 관리](#11-zustand--클라이언트-상태-관리)
+12. [MDI 탭 시스템](#12-mdi-탭-시스템)
+13. [새 기능 넣을 때 체크리스트](#13-새-기능-넣을-때-체크리스트)
+14. [스크립트 목록](#14-스크립트)
+
+---
+
+## 1. 처음 시작하기 (온보딩 체크리스트)
+
+처음 프로젝트를 받았다면 아래 순서대로 따라하세요.
+
+### Step 1 — Node.js 설치 확인
+
+Node.js 20 이상이 필요합니다. 터미널에서 버전을 확인하세요.
+
+```bash
+node -v   # v20.x.x 이상이어야 합니다
+```
+
+설치가 필요하다면 [nodejs.org](https://nodejs.org/)에서 LTS 버전을 설치하세요.
+
+### Step 2 — pnpm 설치
+
+이 프로젝트는 패키지 매니저로 **pnpm**을 사용합니다.  
+(`npm`보다 빠르고, Monorepo 환경에 더 적합합니다.)
+
+```powershell
+# corepack을 이용한 설치 (권장)
+corepack enable
+corepack prepare pnpm@10.26.1 --activate
+
+# 또는 npm으로 직접 설치
 npm install -g pnpm@latest-11
+```
 
-pnpm 설치후
-pnpm i or pnpm install
+### Step 3 — 의존성 설치
+
+프로젝트 루트에서 한 번만 실행하면 모든 패키지의 의존성이 설치됩니다.
+
+```bash
+pnpm install
+```
+
+### Step 4 — VSCode 확장 프로그램 설치
+
+[아래 권장 확장 프로그램 목록](#3-권장-vscode-확장-프로그램)을 참고해서 설치하세요.
+
+### Step 5 — 개발 서버 실행
+
+```bash
+pnpm dev
+```
+
+브라우저에서 [http://localhost:3000](http://localhost:3000) 으로 접속하면 앱이 열립니다.
+
+### Step 6 — md 파일 뷰어
+
+README 같은 마크다운 파일을 보기 좋게 렌더링하려면 VSCode에서 **MarkMaid View** 확장 프로그램을 설치하세요.
 
 ---
 
-## 권장 VSCode 확장 프로그램
+## 2. 주요 라이브러리 버전
 
-VSCode 확장 프로그램 탭에서 아래 항목들을 검색하여 설치합니다.
+| 분류                | 라이브러리                   | 버전        | 한 줄 설명 |
+| ------------------- | ---------------------------- | ----------- | ---------- |
+| **런타임**          | Node.js                      | `>=20`      | JavaScript 실행 환경 |
+| **패키지 매니저**   | pnpm                         | `10.26.1`   | 빠른 패키지 설치, Monorepo 지원 |
+| **빌드**            | Turbo                        | `^2.8.0`    | Monorepo 병렬 빌드 도구 |
+| **프레임워크**      | Next.js                      | `16.1.0`    | React 기반 풀스택 웹 프레임워크 |
+| **UI**              | React                        | `19.2.1`    | UI 컴포넌트 라이브러리 |
+| **UI**              | React DOM                    | `19.2.1`    | React를 브라우저 DOM에 렌더링 |
+| **UI 컴포넌트**     | MUI (Material UI)            | `^7.3.11`   | 구글 Material Design 기반 UI 컴포넌트 모음 |
+| **UI 컴포넌트**     | MUI Icons                    | `^7.3.11`   | MUI 전용 아이콘 세트 |
+| **스타일**          | Emotion React                | `^11.14.0`  | CSS-in-JS 스타일링 (MUI 내부 사용) |
+| **스타일**          | Emotion Styled               | `^11.14.1`  | styled-components 방식의 Emotion API |
+| **서버 상태**       | TanStack Query (React Query) | `^5.100.14` | API 데이터 조회/캐싱/동기화 관리 |
+| **HTTP 클라이언트** | Axios                        | `^1.16.1`   | HTTP 요청 라이브러리 (fetch 대체) |
+| **코드 생성**       | Orval                        | `^8.12.3`   | OpenAPI 스펙으로 API 클라이언트 코드 자동 생성 |
+| **스키마 검증**     | Zod                          | `^4.4.3`    | 런타임 데이터 유효성 검증 및 TypeScript 타입 추론 |
+| **폼**              | React Hook Form              | `^7.77.0`   | 성능 최적화된 폼 상태 관리 |
+| **폼**              | @hookform/resolvers          | `^5.4.0`    | React Hook Form + Zod 연결 어댑터 |
+| **차트**            | ECharts                      | `^6.1.0`    | Apache 오픈소스 차트 라이브러리 |
+| **차트**            | echarts-for-react            | `^3.0.6`    | ECharts의 React 래퍼 |
+| **클라이언트 상태** | Zustand                      | `^5.0.14`   | 가볍고 간단한 전역 상태 관리 |
+| **스토리북**        | Storybook                    | `10.4.1`    | UI 컴포넌트 독립 개발 및 문서화 도구 |
+| **언어**            | TypeScript                   | `^5.8.3`    | JavaScript에 타입 시스템을 추가한 언어 |
+| **린터**            | ESLint                       | `^9.28.0`   | 코드 품질 규칙 검사 |
+| **포매터**          | Prettier                     | `^3.8.3`    | 코드 스타일 자동 정렬 |
+
+---
+
+## 3. 권장 VSCode 확장 프로그램
+
+VSCode 왼쪽 사이드바의 **Extensions** 탭(`Ctrl+Shift+X`)에서 아래 확장 프로그램 ID를 검색해 설치하세요.
 
 | 확장 ID                  | 이름       | 설명                                             |
 | ------------------------ | ---------- | ------------------------------------------------ |
@@ -58,7 +147,10 @@ VSCode 확장 프로그램 탭에서 아래 항목들을 검색하여 설치합�
 
 ---
 
-## ESLint / Prettier 설정
+## 4. ESLint / Prettier 설정
+
+> **ESLint**는 잘못된 코드 패턴을 잡아주는 검사기, **Prettier**는 코드 스타일을 자동으로 맞춰주는 포매터입니다.  
+> 둘이 충돌하지 않도록 함께 설정합니다.
 
 ### 1. 확장 프로그램 설치
 
@@ -139,108 +231,123 @@ export default eslintConfig;
 
 ---
 
-## 명명 규칙 (Naming Convention)
-
-| 대상 | 규칙 | 예시 |
-| ---- | ---- | ---- |
-| **폴더 (slice 이름)** | camelCase | `qnaCreate/`, `apiPlayground/`, `zustandDemo/` |
-| **React 컴포넌트 파일** | PascalCase | `QnaCreateForm.tsx`, `AppHeader.tsx` |
-| **훅 파일** | camelCase (`use` 접두사 유지) | `useQnaForm.ts`, `useTabState.ts` |
-| **스토어 / 모델 파일** | camelCase | `volatileStore.ts`, `persistentStore.ts` |
-| **타입 / 설정 / 유틸 파일** | camelCase | `types.ts`, `routes.ts` |
-| **배럴 파일** | 항상 `index.ts` 고정 | `index.ts` |
-| **Next.js 예약 파일** | Next.js 규약 유지 (변경 불가) | `page.tsx`, `layout.tsx`, `globals.css` |
-| **CSS 모듈** | 컴포넌트와 동일한 이름, 소문자 유지 | `qcell.module.css` |
-
-**요약: 폴더 camelCase · 컴포넌트 PascalCase · 그 외 camelCase**
-
-```
-src/features/
-└── qnaCreate/                  ← 폴더: camelCase
-    ├── model/
-    │   └── useQnaForm.ts       ← 훅: camelCase
-    ├── ui/
-    │   └── QnaCreateForm.tsx   ← 컴포넌트: PascalCase
-    └── index.ts                ← 배럴: 항상 index.ts
-```
-
-> **왜 이 규칙인가?**
->
-> - 폴더 이름에 하이픈(`-`)이 포함되면 일부 도구(ESLint import 플러그인, shell 등)에서 따옴표 처리가 필요합니다. camelCase는 JavaScript 식별자로 바로 사용할 수 있어 import 경로가 깔끔합니다.
-> - 컴포넌트 파일은 내보내는 함수와 이름을 일치시켜 파일만 봐도 어떤 컴포넌트인지 바로 알 수 있습니다.
-> - `index.ts`는 barrel 역할로 항상 고정합니다.
-
----
-
-## 폴더 구조 (단일 서비스용)
+## 5. 폴더 구조
 
 `apps/` 없이 **루트가 Next 앱**, 공통 코드만 `packages/`에 둡니다.
 
 ```
 next-tanstack-monorepo/
-├── app/                    # Next 라우트만 (얇은 re-export)
+├── app/                    # Next.js 라우트 (URL 경로 정의만 담당)
 │   ├── layout.tsx
 │   ├── page.tsx
 │   └── (board)/notice|qna/
-├── src/                    # FSD (Feature-Sliced Design)
-│   ├── application/        # FSD app 레이어 (providers, Next app/ 과 구분)
-│   ├── screens/            # 화면 조립 (FSD pages — Next pages/ 와 충돌 방지)
-│   ├── widgets/            # 큰 UI 블록
-│   ├── features/           # 유스케이스
-│   ├── entities/           # 도메인 개념
-│   └── shared/             # 앱 전용 공통 (config, lib)
+├── src/                    # 실제 기능 코드 (FSD 아키텍처)
+│   ├── application/        # 앱 전체 Provider 초기화 (MUI, Query 등)
+│   ├── screens/            # 각 URL에 대응하는 화면 조립
+│   ├── widgets/            # 여러 기능을 묶은 큰 UI 블록
+│   ├── features/           # 사용자가 하는 동작 단위
+│   ├── entities/           # 앱이 다루는 핵심 데이터(도메인) 타입/모델
+│   └── shared/             # 도메인 없는 순수 유틸 (라우트 상수 등)
 ├── public/
-├── packages/               # FSD shared 인프라 (UI, API, Query)
-│   ├── api-client/         # Orval + axios
-│   ├── query/              # TanStack Query
-│   ├── ui/                 # MUI, ECHARTS, QCELL , storybook
-│   ├── types/
-│   └── config-typescript/
+├── packages/               # 공유 라이브러리 (여러 앱이 함께 쓸 수 있는 코드)
+│   ├── api-client/         # Orval + Axios로 생성된 API 호출 코드
+│   ├── query/              # TanStack Query 설정 및 QueryClient
+│   ├── ui/                 # MUI, ECharts, QCELL, Storybook
+│   ├── types/              # 공통 TypeScript 타입 및 Zod 스키마
+│   └── config-typescript/  # 공통 tsconfig 설정
 ├── next.config.ts
-├── package.json            # Next 앱 + workspace 루트
-├── pnpm-workspace.yaml     # packages/* 만 포함
-└── turbo.json
+├── package.json            # 루트 패키지 설정 (워크스페이스 루트)
+├── pnpm-workspace.yaml     # pnpm 워크스페이스 패키지 목록
+└── turbo.json              # Turborepo 빌드 파이프라인 설정
 ```
 
-## FSD 레이어 규칙
+---
 
-의존 방향은 **위 → 아래**만 허용합니다. 같은 레이어의 다른 slice끼리 import는 하지 않습니다.
+## 6. FSD 아키텍처 이해하기
 
+### FSD(Feature-Sliced Design)란?
+
+> **"레고 블록처럼 기능을 조립하는 폴더 구조 방법론입니다."**
+
+FSD는 코드를 **레이어(layer)** 라는 역할별 폴더로 나누고, **위에서 아래 방향으로만** 의존하게 만드는 규칙입니다.
+
+일반적인 프로젝트에서는 어떤 파일이 어느 파일을 import해도 제한이 없어서 코드가 점점 복잡하게 엉킵니다.  
+FSD는 이런 "스파게티 코드"를 방지하기 위해 **방향성 있는 의존 규칙**을 강제합니다.
+
+### 레이어 의존 방향
+
+아래로만 import 가능합니다. 위 레이어가 아래 레이어를 사용합니다.
+
+```mermaid
+flowchart TD
+    nextApp["app/\n(Next.js 라우트 — URL만 담당)"]
+    screens["screens\n(화면 전체 조립)"]
+    widgets["widgets\n(큰 UI 블록)"]
+    features["features\n(사용자 동작 단위)"]
+    entities["entities\n(데이터 개념·타입)"]
+    shared["shared\n(앱 전용 순수 유틸)"]
+    packages["packages\n(공유 라이브러리)"]
+
+    nextApp --> screens
+    screens --> widgets
+    screens --> features
+    screens --> entities
+    screens --> shared
+    screens --> packages
+    widgets --> features
+    widgets --> entities
+    widgets --> shared
+    widgets --> packages
+    features --> entities
+    features --> shared
+    features --> packages
+    entities --> shared
+    entities --> packages
+    shared --> packages
 ```
-app/ (Next)  →  screens  →  widgets  →  features  →  entities  →  shared / packages
-```
 
-| 레이어             | 역할                                                                        | 이 레포 예시                                              |
-| ------------------ | --------------------------------------------------------------------------- | --------------------------------------------------------- |
-| `app/` (Next)      | URL, `layout`, `metadata`. 비즈니스 로직 없음                               | `app/page.tsx` → `@/screens/home` re-export               |
-| `src/application/` | FSD app 레이어 — Provider, 초기화                                           | `AppProviders` (MUI + Query + Theme)                      |
-| `src/screens/`     | **한 라우트 화면** 조립. FSD의 pages                                        | `home`, `notice`, `qna`                                   |
-| `src/widgets/`     | 여러 feature/entity를 묶은 **큰 UI 블록**                                   | `demoDashboard`, `boardNav`                               |
-| `src/features/`    | **사용자가 하는 동작 하나**. UI + 그 동작에 필요한 상태·API 호출을 묶음     | `demoForm`(폼 제출), `apiPlayground`(엔드포인트 테스트)   |
-| `src/entities/`    | **앱이 다루는 핵심 데이터 단위**. 타입·모델만 가짐. feature에서 조립해서 씀 | `notice`(공지 타입), `qna`(QnA 타입)                      |
-| `src/shared/`      | 도메인 없는 앱 전용 유틸                                                    | `shared/config/routes.ts`                                 |
-| `packages/*`       | 멀티앱·인프라급 공통 (FSD shared)                                           | `@repo/ui`, `@repo/api-client`, `@repo/query`             |
+**핵심 규칙:** 같은 레이어끼리는 import하지 않습니다.
+- `features/auth` → `features/cart` ❌ (같은 features 레이어끼리 금지)
+- 필요하다면 `widgets` 또는 `screens`에서 두 feature를 조합합니다.
 
-> **왜 `screens`인가?** Next.js는 `src/pages/`를 Pages Router로 인식합니다. FSD의 pages 레이어 이름은 `screens`로 둡니다.
+### 레이어별 역할
+
+| 레이어             | 역할                                                                        | 이 프로젝트 예시                                            |
+| ------------------ | --------------------------------------------------------------------------- | ------------------------------------------------------- |
+| `app/` (Next.js)   | URL, `layout`, `metadata`. 비즈니스 로직 없음                               | `app/page.tsx` → `@/screens/home` re-export             |
+| `src/application/` | FSD app 레이어 — Provider, 초기화                                           | `AppProviders` (MUI + Query + Theme)                    |
+| `src/screens/`     | **한 라우트 화면** 조립. FSD의 pages 레이어                                 | `home`, `notice`, `qna`                                 |
+| `src/widgets/`     | 여러 feature/entity를 묶은 **큰 UI 블록**                                   | `demoDashboard`, `boardNav`                             |
+| `src/features/`    | **사용자가 하는 동작 하나**. UI + 그 동작에 필요한 상태·API 호출을 묶음     | `demoForm`(폼 제출), `apiPlayground`(엔드포인트 테스트) |
+| `src/entities/`    | **앱이 다루는 핵심 데이터 단위**. 타입·모델만 가짐. feature에서 조립해서 씀 | `notice`(공지 타입), `qna`(QnA 타입)                    |
+| `src/shared/`      | 도메인 없는 앱 전용 유틸                                                    | `shared/config/routes.ts`                               |
+| `packages/*`       | 멀티앱·인프라급 공통 (FSD shared 확장)                                      | `@repo/ui`, `@repo/api-client`, `@repo/query`           |
+
+> **왜 `screens`인가?** Next.js는 `src/pages/`를 Pages Router로 인식합니다. FSD의 pages 레이어 이름 충돌을 피하기 위해 `screens`로 사용합니다.
+
+### features vs entities 구분법
+
+> - `entities` = **"무엇(What)"** — 데이터가 어떻게 생겼는가 (User, Notice의 타입·모델)
+> - `features` = **"어떻게(How)"** — 사용자가 그 데이터로 무엇을 하는가 (로그인, 글쓰기, 검색)
 
 ### Slice 안 segment (폴더 역할)
 
 기능/엔티티 폴더(slice) 안에서는 **파일 종류**별로 segment를 둡니다.
 
-| segment  | 넣는 것                    | 예시                                                                 |
-| -------- | -------------------------- | -------------------------------------------------------------------- |
-| `ui/`    | React 컴포넌트             | `features/demoForm/ui/DemoFormPanel.tsx`                             |
-| `model/` | hook, store, 비즈니스 상태 | `entities/notice/model/types.ts`, (추가 시) `useNoticeList.ts`       |
-| `api/`   | API 호출·Orval 래핑        | (추가 시) `features/noticeList/api/getNotices.ts`                    |
-| `lib/`   | slice **내부만** 쓰는 헬퍼 | slice 전용 포맷터 등                                                 |
+| segment  | 넣는 것                    | 예시                                                           |
+| -------- | -------------------------- | -------------------------------------------------------------- |
+| `ui/`    | React 컴포넌트             | `features/demoForm/ui/DemoFormPanel.tsx`                       |
+| `model/` | hook, store, 비즈니스 상태 | `entities/notice/model/types.ts`, (추가 시) `useNoticeList.ts` |
+| `api/`   | API 호출·Orval 래핑        | (추가 시) `features/noticeList/api/getNotices.ts`              |
+| `lib/`   | slice **내부만** 쓰는 헬퍼 | slice 전용 포맷터 등                                           |
 
 외부에서는 slice의 **`index.ts`(public API)** 만 import 합니다.
 
 ```ts
-// ✅
+// ✅ 올바른 방법 — index.ts를 통해 import
 import { DemoFormPanel } from "@/features/demoForm";
 
-// ❌ segment·내부 파일 직접 import
+// ❌ 잘못된 방법 — 내부 파일을 직접 import
 import { DemoFormPanel } from "@/features/demoForm/ui/DemoFormPanel";
 ```
 
@@ -254,13 +361,7 @@ import { DemoFormPanel } from "@/features/demoForm/ui/DemoFormPanel";
 | **entities**  | ❌      | ❌      | ❌       | —        | ✅              | ✅       |
 | **shared**    | ❌      | ❌      | ❌       | ❌       | slice 간 최소화 | ✅       |
 
-- `features/auth` → `features/cart` ❌ (필요하면 `widgets` 또는 `screens`에서 조합)
-- 도메인 hook·API는 `shared`가 아니라 **해당 feature/entity의 `model/`·`api/`**
-
-> **features vs entities 구분법**
->
-> - `entities` = **"무엇(What)"** — 데이터가 어떻게 생겼는가 (User, Notice의 타입·모델)
-> - `features` = **"어떻게(How)"** — 사용자가 그 데이터로 무엇을 하는가 (로그인, 글쓰기, 검색)
+> 도메인 hook·API는 `shared`가 아니라 **해당 feature/entity의 `model/`·`api/`** 에 둡니다.
 
 ### Custom Hook 위치 기준 (CRUD별)
 
@@ -297,7 +398,9 @@ features/
 
 ### Path alias (`tsconfig.json`)
 
-| alias           | 경로              |
+긴 상대 경로(`../../`) 대신 아래 별칭을 사용합니다.
+
+| alias           | 실제 경로          |
 | --------------- | ----------------- |
 | `@/screens/*`   | `src/screens/*`   |
 | `@/widgets/*`   | `src/widgets/*`   |
@@ -308,9 +411,46 @@ features/
 
 ---
 
-## 예제: 지금 코드가 어떻게 연결되는지
+## 7. 명명 규칙 (Naming Convention)
+
+| 대상                        | 규칙                                | 예시                                           |
+| --------------------------- | ----------------------------------- | ---------------------------------------------- |
+| **폴더 (slice 이름)**       | camelCase                           | `qnaCreate/`, `apiPlayground/`, `zustandDemo/` |
+| **React 컴포넌트 파일**     | PascalCase                          | `QnaCreateForm.tsx`, `AppHeader.tsx`           |
+| **훅 파일**                 | camelCase (`use` 접두사 유지)       | `useQnaForm.ts`, `useTabState.ts`              |
+| **스토어 / 모델 파일**      | camelCase                           | `volatileStore.ts`, `persistentStore.ts`       |
+| **타입 / 설정 / 유틸 파일** | camelCase                           | `types.ts`, `routes.ts`                        |
+| **배럴 파일**               | 항상 `index.ts` 고정                | `index.ts`                                     |
+| **Next.js 예약 파일**       | Next.js 규약 유지 (변경 불가)       | `page.tsx`, `layout.tsx`, `globals.css`        |
+| **CSS 모듈**                | 컴포넌트와 동일한 이름, 소문자 유지 | `qcell.module.css`                             |
+
+**요약: 폴더 camelCase · 컴포넌트 PascalCase · 그 외 camelCase**
+
+```
+src/features/
+└── qnaCreate/                  ← 폴더: camelCase
+    ├── model/
+    │   └── useQnaForm.ts       ← 훅: camelCase
+    ├── ui/
+    │   └── QnaCreateForm.tsx   ← 컴포넌트: PascalCase
+    └── index.ts                ← 배럴: 항상 index.ts
+```
+
+> **왜 이 규칙인가?**
+>
+> - 폴더 이름에 하이픈(`-`)이 포함되면 일부 도구(ESLint import 플러그인, shell 등)에서 따옴표 처리가 필요합니다. camelCase는 JavaScript 식별자로 바로 사용할 수 있어 import 경로가 깔끔합니다.
+> - 컴포넌트 파일은 내보내는 함수와 이름을 일치시켜 파일만 봐도 어떤 컴포넌트인지 바로 알 수 있습니다.
+> - `index.ts`는 barrel 역할로 항상 고정합니다.
+
+---
+
+## 8. 예제: 지금 코드가 어떻게 연결되는지
+
+각 레이어가 실제로 어떻게 연결되는지 흐름을 따라가 봅니다.
 
 ### 1) Next 라우트 → screen (얇은 진입점)
+
+`app/` 폴더는 URL 경로만 담당하고, 실제 UI는 `screens`에 위임합니다.
 
 ```tsx
 // app/page.tsx
@@ -388,7 +528,7 @@ src/shared/lib/
 
 ---
 
-## 실전 샘플: "공지사항" 기능을 처음부터 만든다면
+## 9. 실전 샘플: "공지사항" 기능을 처음부터 만든다면
 
 > 하나의 도메인을 레이어별로 어떻게 나누는지 전체 흐름을 보여줍니다.
 
@@ -455,6 +595,8 @@ export type Notice = {
 
 **② 조회 hook** `entities/notice/model/useNoticeList.ts`
 
+> TanStack Query의 `useQuery`로 서버에서 데이터를 가져오고 캐싱합니다.
+
 ```ts
 import { useQuery } from "@tanstack/react-query";
 
@@ -468,6 +610,8 @@ export function useNoticeList() {
 
 **③ 유효성 검사 스키마** `features/noticeCreate/model/schema.ts`
 
+> Zod로 폼 입력값의 규칙을 정의합니다. React Hook Form과 연결해서 사용합니다.
+
 ```ts
 import { z } from "zod";
 
@@ -478,6 +622,8 @@ export const noticeSchema = z.object({
 ```
 
 **④ 등록 hook** `features/noticeCreate/model/useNoticeCreate.ts`
+
+> TanStack Query의 `useMutation`으로 데이터를 서버에 전송합니다.
 
 ```ts
 import { useMutation } from "@tanstack/react-query";
@@ -519,30 +665,32 @@ export function NoticePage() {
 
 ---
 
-## Zod — 런타임 스키마 검증
+## 10. Zod — 런타임 스키마 검증
 
+> **한 줄 요약:** TypeScript 타입은 컴파일 시에만 체크되지만, Zod는 앱이 실제로 실행될 때도 데이터를 검증합니다.
+>
 > 참조: [https://zod.dev/](https://zod.dev/)
 
-### 개요
-
-Zod는 TypeScript-first 스키마 선언 및 런타임 검증 라이브러리입니다.  
-TypeScript 타입은 컴파일 타임에만 동작하지만, Zod 스키마는 **런타임에서도 실제 데이터를 검증**합니다.
+### Zod가 왜 필요한가요?
 
 ```
-TypeScript 타입  →  컴파일 타임 안전성
-Zod 스키마      →  런타임 안전성 + 타입 자동 추론
+TypeScript 타입  →  코드 작성 시(컴파일 타임) 안전성만 보장
+Zod 스키마      →  앱 실행 중(런타임)에도 실제 데이터를 검증 + 타입 자동 추론
 ```
+
+예를 들어 API 서버가 예상과 다른 데이터를 내려줘도, TypeScript는 이를 잡을 수 없습니다.  
+Zod의 `safeParse`를 쓰면 런타임에 데이터가 스키마에 맞는지 확인할 수 있습니다.
 
 ### 설치 위치
 
-이 모노레포에서 `zod`는 `@repo/types` 패키지에서 관리합니다.  
+이 Monorepo에서 `zod`는 `@repo/types` 패키지에서 관리합니다.  
 루트 앱과 다른 패키지는 `zod`를 직접 의존하지 않고 `@repo/types`를 통해 사용합니다.
 
 ```ts
-// ✅ 권장 — @repo/types를 통해 사용
+// ✅ 권장 — @repo/types를 통해 사용 (버전 통일)
 import { z } from "@repo/types";
 
-// ❌ 비권장 — 직접 참조 시 버전 분산 위험
+// ❌ 비권장 — 직접 참조 시 패키지마다 버전이 달라질 위험
 import { z } from "zod";
 ```
 
@@ -564,7 +712,7 @@ const UserSchema = z.object({
   active: z.boolean(),
 });
 
-// safeParse: 실패해도 예외를 던지지 않음
+// safeParse: 실패해도 예외를 던지지 않음 (parse는 예외를 던짐)
 const result = UserSchema.safeParse(apiResponse);
 
 if (result.success) {
@@ -614,19 +762,19 @@ packages/types/src/schemas/
 
 ---
 
-## Zustand — 클라이언트 상태 관리
+## 11. Zustand — 클라이언트 상태 관리
 
+> **한 줄 요약:** 전역 상태를 간단하게 만들 수 있는 가벼운 라이브러리입니다. Redux보다 코드가 훨씬 짧습니다.
+>
 > 참조: [https://zustand.docs.pmnd.rs/](https://zustand.docs.pmnd.rs/learn/getting-started/introduction)
 
-### 개요
-
-Zustand는 경량 전역 상태 관리 라이브러리입니다.  
-Redux처럼 보일러플레이트가 많지 않고, Context처럼 불필요한 리렌더링이 발생하지 않습니다.
+### 언제 무엇을 쓰나요?
 
 ```
-useState / useReducer  →  컴포넌트 로컬 상태
-React Context          →  리렌더링 범위 조절이 어렵고 성능 최적화 복잡
+useState / useReducer  →  특정 컴포넌트 내부에서만 쓰는 상태
+React Context          →  여러 컴포넌트가 공유하지만 리렌더링 최적화가 복잡
 Zustand                →  전역 상태, selector로 필요한 값만 구독 → 리렌더링 최소화
+TanStack Query         →  서버에서 가져오는 데이터(API 응답)의 상태
 ```
 
 ### 두 가지 패턴 비교
@@ -767,8 +915,8 @@ persist(stateCreator, {
 
 ### FSD 위치 기준
 
-| 범위                                  | 위치                                            |
-| ------------------------------------- | ----------------------------------------------- |
+| 범위                                  | 위치                                          |
+| ------------------------------------- | --------------------------------------------- |
 | 특정 feature에서만 쓰는 스토어        | `src/features/{name}/model/use{Name}Store.ts` |
 | 여러 feature에서 공유하는 전역 스토어 | `src/shared/model/use{Name}Store.ts`          |
 
@@ -800,11 +948,12 @@ src/features/zustandDemo/
 
 ---
 
-## MDI 탭 시스템
+## 12. MDI 탭 시스템
 
+> **한 줄 요약:** 화면 전환 없이 여러 페이지를 브라우저 탭처럼 열어두는 UI 시스템입니다.
+>
 > 관련 파일: `packages/ui/src/layout/mdi/`, `src/shared/config/routes.ts`, `app/(main)/layout.tsx`
 
-화면 전환 없이 여러 페이지를 탭으로 열어두는 MDI(Multiple Document Interface) 시스템입니다.  
 탭 목록과 활성 탭은 `localStorage`에 자동 저장되어 **새로고침 후에도 복원**됩니다.
 
 ### 새 페이지를 탭으로 추가하는 방법
@@ -819,8 +968,7 @@ export const TAB_ROUTES: Record<string, TabRouteConfig> = {
 
   "/settings": {
     title: "설정",
-    loader: () =>
-      import("@/screens/settings").then((m) => ({ default: m.SettingsPage })),
+    loader: () => import("@/screens/settings").then((m) => ({ default: m.SettingsPage })),
   },
 };
 ```
@@ -844,11 +992,7 @@ function SettingsPage() {
 
   return (
     <label>
-      <input
-        type="checkbox"
-        checked={darkMode}
-        onChange={(e) => setDarkMode(e.target.checked)}
-      />
+      <input type="checkbox" checked={darkMode} onChange={(e) => setDarkMode(e.target.checked)} />
       다크 모드
     </label>
   );
@@ -872,8 +1016,7 @@ function SettingsPage() {
   const [form, setForm] = useTabState<SettingsForm>("/settings", INITIAL);
 
   // 함수형 업데이트로 일부 필드만 변경
-  const handleTheme = (theme: "light" | "dark") =>
-    setForm((prev) => ({ ...prev, theme }));
+  const handleTheme = (theme: "light" | "dark") => setForm((prev) => ({ ...prev, theme }));
 
   return (
     <select value={form.theme} onChange={(e) => handleTheme(e.target.value as "light" | "dark")}>
@@ -891,10 +1034,10 @@ function SettingsPage() {
 탭 컴포넌트 내에서 `useRegisterTabClose`를 사용하면  
 사용자가 탭을 닫기 전에 함수를 실행할 수 있습니다.
 
-| 반환값 | 동작 |
-| --- | --- |
-| `false` | 닫기 취소 (탭 유지) |
-| `true` / `void` | 닫기 진행 |
+| 반환값             | 동작                                 |
+| ------------------ | ------------------------------------ |
+| `false`            | 닫기 취소 (탭 유지)                  |
+| `true` / `void`    | 닫기 진행                            |
 | `Promise<boolean>` | await 후 처리 (비동기 다이얼로그 등) |
 
 > **주의:** 비활성 탭(언마운트 상태)을 닫을 때는 콜백이 실행되지 않습니다.  
@@ -942,8 +1085,14 @@ function NoticePage() {
       {/* 폼 내용 */}
       <ConfirmDialog
         open={open}
-        onConfirm={() => { setOpen(false); resolve?.(true); }}
-        onCancel={() => { setOpen(false); resolve?.(false); }}
+        onConfirm={() => {
+          setOpen(false);
+          resolve?.(true);
+        }}
+        onCancel={() => {
+          setOpen(false);
+          resolve?.(false);
+        }}
       />
     </>
   );
@@ -1016,7 +1165,44 @@ app/(main)/layout.tsx          ← MDI 레이아웃 (직접 수정 불필요)
 
 ---
 
-## 새 기능 넣을 때 (체크리스트)
+## 13. 새 기능 넣을 때 체크리스트
+
+새 기능을 어디에 넣을지 모르겠다면 아래 흐름도를 따라가세요.
+
+```mermaid
+flowchart TD
+    start([새 기능을 만들려 합니다])
+    q1{새 URL 화면인가?}
+    q2{여러 기능을 한 블록으로 묶나?}
+    q3{사용자 동작인가?\n로그인·필터·제출 등}
+    q4{Notice·User 같은\n데이터 개념인가?}
+    q5{여러 앱이 공유하는\n공통 컴포넌트인가?}
+
+    answerScreen["app/.../page.tsx\n+ src/screens/name/"]
+    answerWidget["src/widgets/name/"]
+    answerFeature["src/features/name/"]
+    answerEntity["src/entities/name/"]
+    answerUI["@repo/ui\n(packages/ui)"]
+    answerAPI["@repo/api-client\n(packages/api-client)"]
+    answerQuery["@repo/query\n(packages/query)"]
+    answerShared["src/shared/lib/\n(순수 유틸 hook)"]
+
+    start --> q1
+    q1 -->|예| answerScreen
+    q1 -->|아니오| q2
+    q2 -->|예| answerWidget
+    q2 -->|아니오| q3
+    q3 -->|예| answerFeature
+    q3 -->|아니오| q4
+    q4 -->|예| answerEntity
+    q4 -->|아니오| q5
+    q5 -->|버튼·Input·테마| answerUI
+    q5 -->|Orval API·axios| answerAPI
+    q5 -->|QueryClient·queryKeys| answerQuery
+    q5 -->|debounce 등 순수 유틸| answerShared
+```
+
+**빠른 참조표**
 
 | 질문                                 | 넣을 곳                                    |
 | ------------------------------------ | ------------------------------------------ |
@@ -1049,7 +1235,7 @@ src/screens/notice/
 
 ---
 
-## `app/` vs `src/` — Next colocation
+## app/ vs src/ — Next colocation
 
 | 패턴                                        | FSD에서                                    |
 | ------------------------------------------- | ------------------------------------------ |
@@ -1065,24 +1251,17 @@ src/screens/notice/
 | `apps/web/app/...` | web, admin, api 등 **배포 단위가 여러 개** |
 | `app/...` (루트)   | **서비스 1개** + 코드만 패키지로 분리      |
 
-지금처럼 서비스가 하나면 루트 `app/`이 경로도 짧고 설정도 단순합니다. monorepo 이점(공유 패키지, Orval, Query 설정 분리)은 그대로 유지됩니다.
+지금처럼 서비스가 하나면 루트 `app/`이 경로도 짧고 설정도 단순합니다. Monorepo 이점(공유 패키지, Orval, Query 설정 분리)은 그대로 유지됩니다.
 
-## 시작하기
+---
 
-```powershell
-corepack enable
-corepack prepare pnpm@10.26.1 --activate
-pnpm install
-pnpm dev
-```
-
-## 스크립트
+## 14. 스크립트
 
 | 명령             | 설명                         |
 | ---------------- | ---------------------------- |
-| `pnpm lint`      | ESLint (`eslint.config.mjs`) |
 | `pnpm dev`       | 개발 서버 (localhost:3000)   |
 | `pnpm build`     | Next 프로덕션 빌드           |
+| `pnpm lint`      | ESLint (`eslint.config.mjs`) |
 | `pnpm codegen`   | Orval API 클라이언트 생성    |
 | `pnpm typecheck` | 루트 + packages 타입 검사    |
 | `pnpm storybook` | 스토리북 (localhost:6006)    |
