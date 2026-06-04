@@ -10,6 +10,7 @@ import {
 } from '@tanstack/react-query';
 import type {
   MutationFunction,
+  QueryClient,
   UseMutationOptions,
   UseMutationResult
 } from '@tanstack/react-query';
@@ -79,13 +80,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
  */
 export const useSecureEndpoint = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof secureEndpoint>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof secureEndpoint>>,
         TError,
         void,
         TContext
       > => {
-      return useMutation(getSecureEndpointMutationOptions(options));
+      return useMutation(getSecureEndpointMutationOptions(options), queryClient);
     }
     /**
  * 인증 없이 호출 가능
@@ -141,11 +142,11 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
  */
 export const usePublicEndpoint = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof publicEndpoint>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof publicEndpoint>>,
         TError,
         void,
         TContext
       > => {
-      return useMutation(getPublicEndpointMutationOptions(options));
+      return useMutation(getPublicEndpointMutationOptions(options), queryClient);
     }

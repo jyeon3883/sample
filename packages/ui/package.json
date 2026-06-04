@@ -14,6 +14,7 @@
     "./atoms/select": "./src/atoms/Select.tsx",
     "./atoms/typography": "./src/atoms/Typography.tsx",
     "./atoms/feedback": "./src/atoms/Feedback.tsx",
+    "./atoms/menubar": "./src/atoms/menubar/index.ts",
     "./molecules": "./src/molecules/index.ts",
     "./molecules/search-input": "./src/molecules/SearchInput.tsx",
     "./molecules/labeled-select": "./src/molecules/LabeledSelect.tsx",
@@ -55,6 +56,7 @@
     "zustand": "^5.0.0"
   },
   "dependencies": {
+    "@base-ui/react": "^1.5.0",
     "echarts": "^6.1.0",
     "echarts-for-react": "^3.0.6",
     "qcell-react": "1.0.98"

@@ -14,7 +14,8 @@ loadEnv({ path: path.join(rootDir, ".env.local") });
 loadEnv({ path: path.join(rootDir, `.env.${environment}`) });
 loadEnv({ path: path.join(rootDir, ".env") });
 
-const openApiTarget = process.env.ORVAL_OPENAPI_URL_MAIN ?? "./openapi/schema.yaml";
+const openApiTarget =
+  process.env.ORVAL_OPENAPI_URL_MAIN ?? "./openapi/schema.yaml";
 
 export default defineConfig({
   mainApi: {

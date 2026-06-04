@@ -9,8 +9,13 @@ import {
   useQuery
 } from '@tanstack/react-query';
 import type {
+  DataTag,
+  DefinedInitialDataOptions,
+  DefinedUseQueryResult,
+  QueryClient,
   QueryFunction,
   QueryKey,
+  UndefinedInitialDataOptions,
   UseQueryOptions,
   UseQueryResult
 } from '@tanstack/react-query';
@@ -58,7 +63,7 @@ export const getRefreshQueryKey = (refreshTokenRequest?: RefreshTokenRequest,) =
     }
 
 
-export const getRefreshQueryOptions = <TData = Awaited<ReturnType<typeof refresh>>, TError = unknown>(refreshTokenRequest: RefreshTokenRequest, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof refresh>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+export const getRefreshQueryOptions = <TData = Awaited<ReturnType<typeof refresh>>, TError = unknown>(refreshTokenRequest: RefreshTokenRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof refresh>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -73,25 +78,49 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof refresh>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof refresh>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type RefreshQueryResult = NonNullable<Awaited<ReturnType<typeof refresh>>>
 export type RefreshQueryError = unknown
 
 
+export function useRefresh<TData = Awaited<ReturnType<typeof refresh>>, TError = unknown>(
+ refreshTokenRequest: RefreshTokenRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof refresh>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof refresh>>,
+          TError,
+          Awaited<ReturnType<typeof refresh>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useRefresh<TData = Awaited<ReturnType<typeof refresh>>, TError = unknown>(
+ refreshTokenRequest: RefreshTokenRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof refresh>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof refresh>>,
+          TError,
+          Awaited<ReturnType<typeof refresh>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useRefresh<TData = Awaited<ReturnType<typeof refresh>>, TError = unknown>(
+ refreshTokenRequest: RefreshTokenRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof refresh>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary 토큰 갱신
  */
 
 export function useRefresh<TData = Awaited<ReturnType<typeof refresh>>, TError = unknown>(
- refreshTokenRequest: RefreshTokenRequest, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof refresh>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+ refreshTokenRequest: RefreshTokenRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof refresh>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getRefreshQueryOptions(refreshTokenRequest,options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
@@ -129,7 +158,7 @@ export const getLogoutQueryKey = (refreshTokenRequest?: RefreshTokenRequest,) =>
     }
 
 
-export const getLogoutQueryOptions = <TData = Awaited<ReturnType<typeof logout>>, TError = unknown>(refreshTokenRequest: RefreshTokenRequest, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof logout>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+export const getLogoutQueryOptions = <TData = Awaited<ReturnType<typeof logout>>, TError = unknown>(refreshTokenRequest: RefreshTokenRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof logout>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -144,25 +173,49 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof logout>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof logout>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type LogoutQueryResult = NonNullable<Awaited<ReturnType<typeof logout>>>
 export type LogoutQueryError = unknown
 
 
+export function useLogout<TData = Awaited<ReturnType<typeof logout>>, TError = unknown>(
+ refreshTokenRequest: RefreshTokenRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof logout>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof logout>>,
+          TError,
+          Awaited<ReturnType<typeof logout>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useLogout<TData = Awaited<ReturnType<typeof logout>>, TError = unknown>(
+ refreshTokenRequest: RefreshTokenRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof logout>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof logout>>,
+          TError,
+          Awaited<ReturnType<typeof logout>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useLogout<TData = Awaited<ReturnType<typeof logout>>, TError = unknown>(
+ refreshTokenRequest: RefreshTokenRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof logout>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary 로그아웃
  */
 
 export function useLogout<TData = Awaited<ReturnType<typeof logout>>, TError = unknown>(
- refreshTokenRequest: RefreshTokenRequest, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof logout>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+ refreshTokenRequest: RefreshTokenRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof logout>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getLogoutQueryOptions(refreshTokenRequest,options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
@@ -200,7 +253,7 @@ export const getLoginQueryKey = (loginRequest?: LoginRequest,) => {
     }
 
 
-export const getLoginQueryOptions = <TData = Awaited<ReturnType<typeof login>>, TError = unknown>(loginRequest: LoginRequest, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof login>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+export const getLoginQueryOptions = <TData = Awaited<ReturnType<typeof login>>, TError = unknown>(loginRequest: LoginRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof login>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -215,25 +268,49 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof login>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof login>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type LoginQueryResult = NonNullable<Awaited<ReturnType<typeof login>>>
 export type LoginQueryError = unknown
 
 
+export function useLogin<TData = Awaited<ReturnType<typeof login>>, TError = unknown>(
+ loginRequest: LoginRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof login>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof login>>,
+          TError,
+          Awaited<ReturnType<typeof login>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useLogin<TData = Awaited<ReturnType<typeof login>>, TError = unknown>(
+ loginRequest: LoginRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof login>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof login>>,
+          TError,
+          Awaited<ReturnType<typeof login>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useLogin<TData = Awaited<ReturnType<typeof login>>, TError = unknown>(
+ loginRequest: LoginRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof login>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary 로그인
  */
 
 export function useLogin<TData = Awaited<ReturnType<typeof login>>, TError = unknown>(
- loginRequest: LoginRequest, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof login>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+ loginRequest: LoginRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof login>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getLoginQueryOptions(loginRequest,options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
@@ -271,7 +348,7 @@ export const getLogin1QueryKey = (loginRequest?: LoginRequest,) => {
     }
 
 
-export const getLogin1QueryOptions = <TData = Awaited<ReturnType<typeof login1>>, TError = unknown>(loginRequest: LoginRequest, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof login1>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+export const getLogin1QueryOptions = <TData = Awaited<ReturnType<typeof login1>>, TError = unknown>(loginRequest: LoginRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof login1>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -286,25 +363,49 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof login1>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof login1>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type Login1QueryResult = NonNullable<Awaited<ReturnType<typeof login1>>>
 export type Login1QueryError = unknown
 
 
+export function useLogin1<TData = Awaited<ReturnType<typeof login1>>, TError = unknown>(
+ loginRequest: LoginRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof login1>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof login1>>,
+          TError,
+          Awaited<ReturnType<typeof login1>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useLogin1<TData = Awaited<ReturnType<typeof login1>>, TError = unknown>(
+ loginRequest: LoginRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof login1>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof login1>>,
+          TError,
+          Awaited<ReturnType<typeof login1>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useLogin1<TData = Awaited<ReturnType<typeof login1>>, TError = unknown>(
+ loginRequest: LoginRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof login1>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary 로그인
  */
 
 export function useLogin1<TData = Awaited<ReturnType<typeof login1>>, TError = unknown>(
- loginRequest: LoginRequest, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof login1>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+ loginRequest: LoginRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof login1>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getLogin1QueryOptions(loginRequest,options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
@@ -342,7 +443,7 @@ export const getIssueApiKeyQueryKey = (apiKeyIssueRequest?: ApiKeyIssueRequest,)
     }
 
 
-export const getIssueApiKeyQueryOptions = <TData = Awaited<ReturnType<typeof issueApiKey>>, TError = unknown>(apiKeyIssueRequest?: ApiKeyIssueRequest, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof issueApiKey>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+export const getIssueApiKeyQueryOptions = <TData = Awaited<ReturnType<typeof issueApiKey>>, TError = unknown>(apiKeyIssueRequest?: ApiKeyIssueRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof issueApiKey>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -357,25 +458,49 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof issueApiKey>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof issueApiKey>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type IssueApiKeyQueryResult = NonNullable<Awaited<ReturnType<typeof issueApiKey>>>
 export type IssueApiKeyQueryError = unknown
 
 
+export function useIssueApiKey<TData = Awaited<ReturnType<typeof issueApiKey>>, TError = unknown>(
+ apiKeyIssueRequest: undefined |  ApiKeyIssueRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof issueApiKey>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof issueApiKey>>,
+          TError,
+          Awaited<ReturnType<typeof issueApiKey>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useIssueApiKey<TData = Awaited<ReturnType<typeof issueApiKey>>, TError = unknown>(
+ apiKeyIssueRequest?: ApiKeyIssueRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof issueApiKey>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof issueApiKey>>,
+          TError,
+          Awaited<ReturnType<typeof issueApiKey>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useIssueApiKey<TData = Awaited<ReturnType<typeof issueApiKey>>, TError = unknown>(
+ apiKeyIssueRequest?: ApiKeyIssueRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof issueApiKey>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary 인증키 발급
  */
 
 export function useIssueApiKey<TData = Awaited<ReturnType<typeof issueApiKey>>, TError = unknown>(
- apiKeyIssueRequest?: ApiKeyIssueRequest, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof issueApiKey>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+ apiKeyIssueRequest?: ApiKeyIssueRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof issueApiKey>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getIssueApiKeyQueryOptions(apiKeyIssueRequest,options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
