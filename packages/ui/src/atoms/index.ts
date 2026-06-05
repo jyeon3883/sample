@@ -36,3 +36,7 @@ export { StepIndicator } from "./StepIndicator";
 export type { StepIndicatorProps, Step } from "./StepIndicator";
 export { Spinner } from "./Spinner";
 export type { SpinnerProps, SpinnerSize, SpinnerVariant } from "./Spinner";
+export { StructuredList } from "./StructuredList";
+export type { StructuredListProps, StructuredListItem, StructuredListBadge, StructuredListMeta } from "./StructuredList";
+export { CriticalAlerts } from "./CriticalAlerts";
+export type { CriticalAlertsProps, CriticalAlertItem, CriticalAlertSeverity } from "./CriticalAlerts";

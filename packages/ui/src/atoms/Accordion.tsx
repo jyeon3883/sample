@@ -87,13 +87,13 @@ export function Accordion({
     isContained
       ? { display: "flex", flexDirection: "column", gap: 1 }
       : {
-          border: `1px solid ${BORDER_COLOR}`,
-          borderRadius: 1,
-          overflow: "hidden",
-          "& .MuiAccordion-root:not(:last-of-type)": {
-            borderBottom: `1px solid ${BORDER_COLOR}`,
-          },
+        border: `1px solid ${BORDER_COLOR}`,
+        borderRadius: 1,
+        overflow: "hidden",
+        "& .MuiAccordion-root:not(:last-of-type)": {
+          borderBottom: `1px solid ${BORDER_COLOR}`,
         },
+      },
     ...(Array.isArray(sx) ? sx : sx ? [sx] : []),
   ];
 
@@ -182,8 +182,8 @@ export function Accordion({
                   color: !isDisclosure && isOpen
                     ? GOV_BLUE
                     : item.disabled
-                    ? "text.disabled"
-                    : "text.primary",
+                      ? "text.disabled"
+                      : "text.primary",
                   transition: "color 0.2s",
                 }}
               >
