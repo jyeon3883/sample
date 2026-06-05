@@ -1,14 +1,20 @@
-import { ListSearchForm } from "@/features/listSearchForm/ui/ListSearchForm";
-import { useListPosts, type ListPostsParams } from "@repo/api-client";
+import {
+  useListPosts,
+  type ListPostsParams,
+  type SampleTagPostListResponse,
+} from "@repo/api-client";
 import { Box } from "@repo/ui/atoms";
 import { useState } from "react";
 import { DefaultFilters } from "./model/type";
+import { ListSearchForm } from "@/features/listSearchForm";
+import { ListPage } from "@/features/list";
 
 export function ListView() {
   /**
    * 검색 필터
    */
   const [filters, setFilters] = useState<ListPostsParams>({});
+  const [data, setData] = useState<SampleTagPostListResponse | null>(null);
 
   /**
    * 게시글 목록 조회
@@ -17,6 +23,7 @@ export function ListView() {
     mutation: {
       onSuccess: (data) => {
         console.log(data);
+        setData(data);
       },
     },
   });
@@ -30,8 +37,9 @@ export function ListView() {
   };
 
   return (
-    <Box>
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
       <ListSearchForm onSearch={handleSearch} filters={filters} setFilters={setFilters} />
+      <ListPage data={data} isLoading={isPending} filters={filters} setFilters={setFilters} />
     </Box>
   );
 }

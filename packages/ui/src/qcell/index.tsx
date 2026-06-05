@@ -22,6 +22,7 @@ type QCELLReactProps = {
 
 export type { QCELLReactRef } from "qcell-react";
 export type QCELLGridRef = QCELLReactRef;
+export type { QCELLObjProperty as QCELLGridObjProperty };
 
 type LoadedQcellProps = {
   width?: string;
@@ -30,13 +31,10 @@ type LoadedQcellProps = {
 };
 
 type LoadedQcellComponent = (
-  props: LoadedQcellProps & { ref?: Ref<QCELLReactRef> },
+  props: LoadedQcellProps & { ref?: Ref<QCELLReactRef> }
 ) => ReactElement;
 
-export const QCELLGrid = forwardRef<QCELLReactRef, QCELLReactProps>(function QCELLGrid(
-  props,
-  ref,
-) {
+export const QCELLGrid = forwardRef<QCELLReactRef, QCELLReactProps>(function QCELLGrid(props, ref) {
   const { loadingFallback, errorFallback, suppressKnownQcellErrors = true, ...qcellProps } = props;
   const [QcellComponent, setQcellComponent] = useState<LoadedQcellComponent | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
