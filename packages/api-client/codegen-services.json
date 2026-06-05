@@ -1,0 +1,12 @@
+{
+  "services": [
+    {
+      "name": "main",
+      "orvalProject": "mainApi",
+      "openApiEnvKey": "ORVAL_OPENAPI_URL_MAIN",
+      "openApiFallback": "./openapi/schema.yaml",
+      "outputTarget": "./src/generated/main/endpoints",
+      "outputSchemas": "./src/generated/main/models"
+    }
+  ]
+}

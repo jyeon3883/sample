@@ -7,8 +7,8 @@
     "./axios": "./src/axios-instance.ts"
   },
   "scripts": {
-    "codegen": "orval && node ./scripts/split-models-by-tag.mjs && node ./scripts/sync-endpoint-exports.mjs",
-    "codegen:main": "orval --project mainApi && node ./scripts/split-models-by-tag.mjs && node ./scripts/sync-endpoint-exports.mjs",
+    "codegen": "node ./scripts/codegen-service.mjs",
+    "codegen:main": "node ./scripts/codegen-service.mjs main",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

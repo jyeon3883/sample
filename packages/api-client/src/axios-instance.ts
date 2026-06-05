@@ -53,6 +53,12 @@ AXIOS_INSTANCE.interceptors.request.use((config) => {
   if (accessToken) {
     setAuthorizationHeader(config, accessToken);
   }
+
+  const apiKey = process.env.NEXT_PUBLIC_API_KEY;
+  if (apiKey) {
+    config.headers.set("X-API-Key", apiKey);
+  }
+
   return config;
 });
 

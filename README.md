@@ -49,6 +49,7 @@ my-app/             next-tanstack-monorepo/
 13. [새 기능 넣을 때 체크리스트](#13-새-기능-넣을-때-체크리스트)
 14. [환경 변수 (env) 규칙](#14-환경-변수-env-규칙)
 15. [스크립트 목록](#15-스크립트)
+16. [새 앱 추가하기](#16-새-앱-추가하기)
 
 ---
 
@@ -249,12 +250,10 @@ next-tanstack-monorepo/
 ├── apps/
 │   ├── web/                # 사용자 앱 (Next.js)
 │   │   ├── app/            # 라우트
-│   │   ├── src/            # FSD
-│   │   └── .env.*          # web 런타임 환경변수
+│   │   └── src/            # FSD
 │   └── admin/              # 관리자 앱 (Next.js)
 │       ├── app/            # 라우트
-│       ├── src/            # FSD
-│       └── .env.*          # admin 런타임 환경변수
+│       └── src/            # FSD
 ├── public/
 ├── packages/               # 공유 라이브러리 (여러 앱이 함께 쓸 수 있는 코드)
 │   ├── api-client/         # Orval + Axios로 생성된 API 호출 코드
@@ -264,7 +263,7 @@ next-tanstack-monorepo/
 │   └── config-typescript/  # 공통 tsconfig 설정
 ├── package.json            # 루트 패키지 설정 (워크스페이스 루트)
 ├── pnpm-workspace.yaml     # pnpm 워크스페이스 패키지 목록
-├── .env.*                  # codegen 환경변수(ORVAL_OPENAPI_URL_MAIN)
+├── .env.*                  # 공통 환경변수 (런타임 + codegen)
 └── turbo.json              # Turborepo 빌드 파이프라인 설정
 ```
 
@@ -1272,7 +1271,45 @@ src/screens/notice/
 
 ## 14. 환경 변수 (env) 규칙
 
-런타임 env와 codegen env를 분리해 관리합니다.
+공통 env는 **루트** `.env.*`에서 관리하고, 앱별로 값이 다를 때만 `apps/<app>/.env.*`로 override합니다.
+
+### 로드 순서
+
+`scripts/load-app-env.mjs`가 `next.config.ts`에서 호출되며, 아래 순서로 로드합니다 (뒤에 로드된 값이 우선).
+
+```
+루트 .env.{APP_ENV}  →  루트 .env.override  →  앱 .env.{APP_ENV}  →  앱 .env.override
+```
+
+- `APP_ENV=local` → `.env.local` 로드
+- `APP_ENV=dev` → `.env.dev` 로드
+- `APP_ENV=prod` → `.env.prod` 로드
+
+### 루트 env (공통)
+
+| 파일 | 용도 |
+| ---- | ---- |
+| `.env.local` | 로컬 개발 (`pnpm dev:*`, `APP_ENV=local`) |
+| `.env.dev` | dev 빌드 (`build:dev`) |
+| `.env.prod` | prod 빌드 (`build:prod`) |
+| `.env.override` | 개인/로컬 override (git 제외, 선택) |
+
+**주요 변수**
+
+| 변수 | 사용처 |
+| ---- | ------ |
+| `NEXT_PUBLIC_API_URL` | 앱 런타임 API base URL |
+| `NEXT_PUBLIC_APP_ENV` | 앱 런타임 환경 표시 (자동 보완됨) |
+| `ORVAL_OPENAPI_URL_*` | `pnpm codegen` OpenAPI URL |
+
+### 앱별 env (override, 선택)
+
+앱마다 API URL·플래그가 다를 때만 `apps/<app>/.env.{local|dev|prod}` 또는 `apps/<app>/.env.override`에 필요한 변수만 작성합니다. 파일이 없어도 루트 env만으로 동작합니다.
+
+```env
+# 예: admin만 다른 API를 쓸 때 — apps/admin/.env.dev
+NEXT_PUBLIC_API_URL=https://admin-dev-api.example.com
+```
 
 ### 포트 관리 규칙
 
@@ -1296,16 +1333,6 @@ pnpm --filter @repo/admin dev -- --port 3101
 > - 개인 개발 환경/CI에서 포트가 자주 달라져야 할 때만 `PORT`를 추가해 사용합니다.
 > - 팀 기본 개발 흐름에서는 현재처럼 스크립트 고정값을 유지하는 편이 충돌과 혼선을 줄입니다.
 
-### 앱 런타임 env
-
-- `apps/web/.env.*`: web 앱 런타임 (`NEXT_PUBLIC_API_URL`)
-- `apps/admin/.env.*`: admin 앱 런타임 (`NEXT_PUBLIC_API_URL`)
-
-### 루트 env (codegen 전용)
-
-- 루트 `.env.*`: `pnpm codegen` 시 `ORVAL_OPENAPI_URL_MAIN` 로 사용
-- 로딩 위치: `packages/api-client/orval.config.ts` (`rootDir` 기준)
-
 ---
 
 ## 15. 스크립트
@@ -1326,3 +1353,53 @@ pnpm --filter @repo/admin dev -- --port 3101
 | `pnpm typecheck:admin` | admin 앱 타입 검사 |
 | `pnpm storybook` | 스토리북 (localhost:6006)    |
 | `pnpm codegen`   | Orval API 클라이언트 생성    |
+| `pnpm create:app` | apps 하위 새 Next.js 앱 스캐폴딩 |
+
+---
+
+## 16. 새 앱 추가하기
+
+### 자동 생성 (권장)
+
+`templates/app` 템플릿을 기반으로 FSD 골격, MDI 레이아웃, 샘플 홈 화면 1개를 생성합니다.
+
+```bash
+pnpm create:app --name portal --port 3002 --display "포털"
+pnpm install
+pnpm dev:portal
+```
+
+| 인자 | 필수 | 설명 |
+| ---- | ---- | ---- |
+| `--name` | ✅ | 앱 폴더명·패키지명 (`portal` → `@repo/portal`). 소문자로 시작, 영문 소문자·숫자만 |
+| `--port` | ❌ | dev/start 포트. 생략 시 3002부터 사용 중이 아닌 포트 자동 선택 |
+| `--display` | ❌ | 헤더·메타데이터 표시명. 생략 시 `--name`과 동일 |
+
+**생성되는 항목**
+
+- `apps/<name>/` — Next.js 앱 (App Router + FSD 폴더 구조)
+- `app/layout.tsx`, `app/(main)/layout.tsx` — `@repo/ui` MDI 레이아웃
+- `src/screens/home/` — 샘플 홈 화면 1개
+- `src/widgets/<name>Header`, `src/widgets/<name>Sidebar`
+- `src/shared/config/routes.ts` — `TAB_ROUTES` (홈 1탭)
+- `src/features/`, `src/entities/` — 빈 폴더 (`.gitkeep`)
+- 루트 `package.json`의 `dev:<name>`, `build:<name>` 등 스크립트
+
+> env는 루트 `.env.*`를 공유합니다. 앱별로 다른 값이 필요할 때만 `apps/<name>/.env.*` override 파일을 추가하세요.
+
+**생성 후 확인**
+
+1. `pnpm install` — 워크스페이스에 새 앱 연결
+2. `pnpm dev:<name>` — `http://localhost:<port>` 에서 MDI 레이아웃 + 홈 화면 확인
+3. 새 화면 추가 시 [새 기능 넣을 때 체크리스트](#13-새-기능-넣을-때-체크리스트) 참고
+
+### 수동 생성 (fallback)
+
+스크립트를 쓰지 않을 때는 `apps/admin`을 복사한 뒤 아래를 직접 수정합니다.
+
+1. `package.json` — `"name": "@repo/<name>"`, dev/start `--port` 변경
+2. `src/shared/config/routes.ts` — 불필요 라우트 제거, `TAB_ROUTES` 정리
+3. `app/(main)/layout.tsx` — `storageKey`를 `mdi-tabs-<name>`으로 변경
+4. Header/Sidebar 위젯 이름·import 경로 정리
+5. 루트 `package.json`에 `dev:<name>`, `build:<name>`, `lint:<name>`, `typecheck:<name>` 추가
+6. `pnpm install`

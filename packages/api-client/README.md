@@ -21,10 +21,26 @@ pnpm codegen
 
 ## MSA 확장
 
-`orval.config.ts`에 서비스 키를 추가하면 됩니다.
+`codegen-services.json`에 서비스를 추가한 뒤 루트 스크립트를 등록합니다.
 
-- `input`: `ORVAL_OPENAPI_URL_<SERVICE>`
-- `output.target`: `./src/generated/<service>/endpoints`
-- `output.schemas`: `./src/generated/<service>/models`
+1. `codegen-services.json`에 항목 추가
+   - `name`: `pnpm codegen:<name>`에 사용 (`main` → `pnpm codegen:main`)
+   - `orvalProject`: Orval project 키
+   - `openApiEnvKey`: `ORVAL_OPENAPI_URL_<SERVICE>` 형태의 env 키
+   - `outputTarget` / `outputSchemas`: `./src/generated/<service>/...`
+2. 루트 `package.json`에 `"codegen:<name>": "cross-env APP_ENV=local pnpm --filter @repo/api-client codegen:<name>"` 추가
+3. 루트 `.env.*`에 `ORVAL_OPENAPI_URL_<SERVICE>` 값 추가
+
+```bash
+pnpm codegen          # 전체 서비스
+pnpm codegen:main     # main 서비스만
+# pnpm codegen:payment  # 추가 서비스 예시
+```
+
+환경별 OpenAPI URL이 필요하면 `APP_ENV`를 바꿔 실행합니다.
+
+```bash
+cross-env APP_ENV=dev pnpm codegen:main
+```
 
 서로 다른 서비스가 같은 `schemas` 디렉터리를 공유하지 않도록 유지하세요.

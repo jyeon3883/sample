@@ -19,7 +19,8 @@ const defaultCookieOptions = (): CookieOptions => ({
   path: "/",
   sameSite: "Lax",
   secure:
-    typeof process !== "undefined" && process.env.NODE_ENV === "production",
+    typeof process !== "undefined" &&
+    process.env.NEXT_PUBLIC_APP_ENV === "prod",
 });
 
 function readCookie(name: string): string | undefined {

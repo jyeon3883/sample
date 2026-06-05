@@ -3,8 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack --port 3001",
+    "dev": "cross-env APP_ENV=local next dev --turbopack --port 3001",
     "build": "next build",
+    "build:dev": "cross-env APP_ENV=dev next build",
+    "build:prod": "cross-env APP_ENV=prod next build",
     "start": "next start --port 3001",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit"

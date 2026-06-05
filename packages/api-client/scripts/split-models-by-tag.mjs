@@ -5,6 +5,8 @@ const generatedRoot = path.resolve("src/generated");
 
 const MODEL_IMPORT_PATTERN =
   /import\s+type\s*\{([^}]*)\}\s*from\s*['"]\.\.\/\.\.\/models['"];?/m;
+const RELATIVE_MODEL_IMPORT_PATTERN =
+  /import\s+type\s*\{[^}]*\}\s*from\s*['"]\.\/([^'"]+)['"];?/g;
 const MODEL_EXPORT_PATTERN = /export\s+(?:type|interface|enum)\s+([A-Za-z0-9_]+)/g;
 const MODEL_INDEX_EXPORT_PATTERN = /export\s+\*\s+from\s+['"]\.\/([^'"]+)['"];?/g;
 
@@ -84,6 +86,60 @@ async function ensureDir(targetPath) {
   await fs.mkdir(targetPath, { recursive: true });
 }
 
+async function resolveModelSourceFile(modelName, modelMap, modelsRoot) {
+  let sourceFile = modelMap.get(modelName);
+  if (!sourceFile) {
+    const fallback = `${modelName.charAt(0).toLowerCase()}${modelName.slice(1)}`;
+    sourceFile = path.join(modelsRoot, `${fallback}.ts`);
+    try {
+      await fs.access(sourceFile);
+    } catch {
+      return undefined;
+    }
+  }
+
+  return sourceFile;
+}
+
+async function collectModelFiles(seedModelNames, modelMap, modelsRoot) {
+  const filesToCopy = new Set();
+  const queue = [];
+
+  for (const modelName of seedModelNames) {
+    const sourceFile = await resolveModelSourceFile(modelName, modelMap, modelsRoot);
+    if (!sourceFile) {
+      console.warn(`[split-models-by-tag] missing model source: ${modelName}`);
+      continue;
+    }
+
+    queue.push(sourceFile);
+  }
+
+  while (queue.length) {
+    const sourceFile = queue.shift();
+    if (filesToCopy.has(sourceFile)) {
+      continue;
+    }
+
+    filesToCopy.add(sourceFile);
+
+    const content = await fs.readFile(sourceFile, "utf8");
+    for (const match of content.matchAll(RELATIVE_MODEL_IMPORT_PATTERN)) {
+      const dependencyPath = path.join(path.dirname(sourceFile), `${match[1]}.ts`);
+      try {
+        await fs.access(dependencyPath);
+        queue.push(dependencyPath);
+      } catch {
+        console.warn(
+          `[split-models-by-tag] missing model dependency: ${toPosixPath(dependencyPath)}`,
+        );
+      }
+    }
+  }
+
+  return filesToCopy;
+}
+
 async function copyTagModels(endpointsRoot, modelsRoot, tag, endpointFileContent, modelMap) {
   const modelNames = extractImportedModels(endpointFileContent);
   if (!modelNames.length) {
@@ -93,24 +149,10 @@ async function copyTagModels(endpointsRoot, modelsRoot, tag, endpointFileContent
   const tagModelDir = path.join(modelsRoot, tag);
   await ensureDir(tagModelDir);
 
+  const sourceFiles = await collectModelFiles(modelNames, modelMap, modelsRoot);
   const indexLines = [];
-  for (const modelName of modelNames) {
-    let sourceFile = modelMap.get(modelName);
-    if (!sourceFile) {
-      const fallback = `${modelName.charAt(0).toLowerCase()}${modelName.slice(1)}`;
-      sourceFile = path.join(modelsRoot, `${fallback}.ts`);
-      try {
-        await fs.access(sourceFile);
-      } catch {
-        sourceFile = undefined;
-      }
-    }
 
-    if (!sourceFile) {
-      console.warn(`[split-models-by-tag] missing model source: ${modelName}`);
-      continue;
-    }
-
+  for (const sourceFile of [...sourceFiles].sort((a, b) => a.localeCompare(b))) {
     const fileName = path.basename(sourceFile);
     const destination = path.join(tagModelDir, fileName);
     await fs.copyFile(sourceFile, destination);
