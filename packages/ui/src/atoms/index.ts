@@ -52,8 +52,6 @@ export type {
   FooterSnsItem,
   FooterBottomMenu,
 } from "./Footer/Footer.types";
-export { Checkbox, Radio, Switch } from "./Feedback";
-export type { CheckboxProps, RadioProps, SwitchProps } from "./Feedback";
 export { Calendar } from "./Calendar";
 export type { CalendarProps } from "./Calendar";
 export { Disclosure } from "./Disclosure";
@@ -80,8 +78,6 @@ export { StepIndicator } from "./StepIndicator";
 export type { StepIndicatorProps, Step } from "./StepIndicator";
 export { Spinner } from "./Spinner";
 export type { SpinnerProps, SpinnerSize, SpinnerVariant } from "./Spinner";
-export { FileUpload } from "./FileUpload";
-export type { FileUploadProps } from "./FileUpload";
 export { SkipLink } from "./SkipLink";
 export type { SkipLinkProps } from "./SkipLink";
 export { StructuredList } from "./StructuredList";
