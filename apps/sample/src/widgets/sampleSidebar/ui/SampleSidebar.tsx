@@ -7,6 +7,7 @@ import { routes } from "@/shared/config/routes";
 const menuItems: SidebarMenuItem[] = [
   { label: "홈", href: routes.home },
   { label: "목록", href: routes.list },
+  { label: "모달", href: routes.modal },
 ];
 
 export function SampleSidebar() {

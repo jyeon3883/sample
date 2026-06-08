@@ -41,6 +41,7 @@ my-app/             next-tanstack-monorepo/
 5. [폴더 구조](#5-폴더-구조)
 6. [FSD 아키텍처 이해하기](#6-fsd-아키텍처-이해하기)
 7. [명명 규칙](#7-명명-규칙-naming-convention)
+   - [파일 확장자 (.ts / .tsx)](#파일-확장자-ts--tsx)
 8. [코드 연결 흐름 예제](#8-예제-지금-코드가-어떻게-연결되는지)
 9. [실전 샘플: 공지사항 기능 만들기](#9-실전-샘플-공지사항-기능을-처음부터-만든다면)
 10. [Zod — 런타임 스키마 검증](#10-zod--런타임-스키마-검증)
@@ -402,6 +403,85 @@ features/
 > **조회 hook을 entities에 두는 이유:** screens, widgets, features 어디서든 공통으로 재사용되기 때문입니다.  
 > **등록·수정·삭제 hook을 features에 두는 이유:** 특정 사용자 행동(폼 제출, 버튼 클릭)에 종속되어 해당 feature 안에서만 쓰이기 때문입니다.
 
+### Custom Hook 배치 가이드 (종합)
+
+이 프로젝트에는 **`hooks/` 전용 폴더가 없습니다.** 훅은 FSD slice 내부의 `model/` segment, `shared/lib/`, 또는 `packages/*`에 둡니다.  
+Next.js App Router의 `app/_hooks` 패턴도 사용하지 않습니다. ([apps/*/app vs src/](#appsapp-vs-src--next-colocation) 참고)
+
+새 커스텀 훅을 추가할 때 아래 흐름도를 따라 위치를 결정합니다.
+
+```mermaid
+flowchart TD
+    start["새 커스텀 훅 추가"]
+    q1{"도메인 이름이\n있는가?"}
+    q2{"읽기 GET인가?\n쓰기 POST/PUT/DELETE인가?"}
+    q3{"여러 앱에서\n공유하는가?"}
+    q4{"순수 UI/인프라\n유틸인가?"}
+
+    sharedLib["src/shared/lib/\nuseDebounce.ts"]
+    entityModel["entities/name/model/\nuseNoticeList.ts"]
+    featureModel["features/name/model/\nuseNoticeCreate.ts"]
+    sharedModel["src/shared/model/\nuseAppStore.ts"]
+    packagesUI["packages/ui/\nuseTabState.ts"]
+    packagesAPI["packages/api-client/\nOrval 생성 훅"]
+
+    start --> q1
+    q1 -->|없음| q4
+    q4 -->|debounce 등| sharedLib
+    q4 -->|Zustand 전역 store| sharedModel
+    q1 -->|있음| q2
+    q2 -->|GET 조회| entityModel
+    q2 -->|쓰기/폼/행동| featureModel
+    q1 --> q3
+    q3 -->|MDI·탭 등| packagesUI
+    q3 -->|API 호출| packagesAPI
+```
+
+**빠른 결정표**
+
+| 훅의 성격 | 넣을 곳 |
+| --------- | ------- |
+| debounce, media query 등 **도메인 없는 유틸** | `src/shared/lib/` |
+| Notice, Post 등 **데이터 조회(GET)** | `src/entities/{name}/model/` |
+| 등록·수정·삭제·폼·필터 등 **사용자 행동** | `src/features/{name}/model/` |
+| 여러 feature 공유 **Zustand store** | `src/shared/model/` ([§11](#11-zustand--클라이언트-상태-관리) 참고) |
+| MDI·탭·공통 UI 인프라 | `packages/ui/` |
+| API 호출 (Orval 생성) | `packages/api-client/` (수동 편집 금지) |
+
+**멀티앱 공통 훅 (`packages/*`)**
+
+2개 이상의 앱(`web`, `sample`, `admin`)에서 쓰는 인프라 훅은 앱 `shared`가 아니라 패키지에 둡니다.
+
+| 종류 | 위치 | 예시 |
+| ---- | ---- | ---- |
+| UI/레이아웃 인프라 | `packages/ui/` | `useTabState`, `useRegisterTabClose` |
+| API React Query 훅 | `packages/api-client/` (Orval 생성) | `useListPosts`, `useLogin` |
+| Query 설정 | `packages/query/` | `QueryProvider`, `queryKeys` (커스텀 훅 없음) |
+
+Orval 생성 훅은 `@repo/api-client`에서 가져와, 앱 도메인 로직이 필요하면 `entities/.../model/` 또는 `features/.../model/`에서 래핑합니다.
+
+**import/export 규칙**
+
+- **파일명:** camelCase + `use` 접두사 — `useQnaForm.ts`, `useTabState.ts`
+- **import:** slice barrel(`index.ts`)을 통해서만 — `@/features/qnaCreate`, `@/shared/lib`
+- **내부 경로 직접 import 지양** — `@/features/qnaCreate/model/useQnaForm` 대신 public API 사용
+
+```ts
+// ✅ 권장 — index.ts를 통해 import
+import { useQnaForm } from "@/features/qnaCreate";
+import { useDebounce } from "@/shared/lib";
+
+// ❌ 내부 파일을 직접 import
+import { useQnaForm } from "@/features/qnaCreate/model/useQnaForm";
+```
+
+**실제 구현 참고**
+
+| 훅 | 위치 |
+| -- | ---- |
+| `useQnaForm` (폼 + MDI 탭 연동) | `apps/web/src/features/qnaCreate/model/useQnaForm.ts` |
+| `useTabState`, `useRegisterTabClose` | `packages/ui/src/layout/mdi/` |
+
 ### Path alias (`tsconfig.json`)
 
 긴 상대 경로(`../../`) 대신 아래 별칭을 사용합니다.
@@ -447,6 +527,123 @@ src/features/
 > - 폴더 이름에 하이픈(`-`)이 포함되면 일부 도구(ESLint import 플러그인, shell 등)에서 따옴표 처리가 필요합니다. camelCase는 JavaScript 식별자로 바로 사용할 수 있어 import 경로가 깔끔합니다.
 > - 컴포넌트 파일은 내보내는 함수와 이름을 일치시켜 파일만 봐도 어떤 컴포넌트인지 바로 알 수 있습니다.
 > - `index.ts`는 barrel 역할로 항상 고정합니다.
+>
+> 확장자 선택 기준은 [파일 확장자 (.ts / .tsx)](#파일-확장자-ts--tsx)를 참고하세요.
+
+### 파일 확장자 (.ts / .tsx)
+
+> **JSX가 있으면 `.tsx`, 없으면 `.ts`**
+
+TypeScript 컴파일러는 JSX를 `.ts` 파일에서 허용하지 않습니다. 이것이 확장자 선택의 유일한 **하드 제약**이며, 아래 흐름도와 표는 이 원칙을 FSD 폴더 구조에 맞게 구체화한 것입니다.
+
+#### 확장자 결정 흐름
+
+```mermaid
+flowchart TD
+    start["새 파일 생성"]
+    q1{"JSX를\n쓰는가?"}
+    q2{"Next.js\n예약 파일인가?"}
+    q3{"배럴\nindex인가?"}
+
+    tsx[".tsx"]
+    ts[".ts"]
+    nextTsx[".tsx\n(page/layout 등)"]
+    indexTs["index.ts\n(re-export만)"]
+
+    start --> q1
+    q1 -->|예| tsx
+    q1 -->|아니오| q2
+    q2 -->|예| nextTsx
+    q2 -->|아니오| q3
+    q3 -->|예| indexTs
+    q3 -->|아니오| ts
+```
+
+**segment별 보조 규칙**
+
+- `ui/` segment → 거의 항상 `.tsx`
+- `model/` segment → 거의 항상 `.ts` (hook, store, types, schema)
+- `shared/config/` → `.ts`
+
+#### 빠른 참조표
+
+| 위치 / 파일 종류                        | 확장자         | 예시                             |
+| --------------------------------------- | -------------- | -------------------------------- |
+| `ui/*.tsx`                              | `.tsx`         | `NoticePage.tsx`, `ListView.tsx` |
+| `model/use*.ts`                         | `.ts`          | `useNoticeList.ts`               |
+| `model/*Store.ts`                       | `.ts`          | `volatileStore.ts`               |
+| `model/types.ts`                        | `.ts`          | `types.ts`                       |
+| `model/schema.ts`                       | `.ts`          | Zod 스키마                       |
+| `shared/config/*.ts`                    | `.ts`          | `routes.ts`                      |
+| slice 배럴                              | **`.ts` 고정** | `index.ts`                       |
+| `apps/*/app/`                           | `.tsx`         | `page.tsx`, `layout.tsx`         |
+| Storybook                               | `.tsx`         | `Button.stories.tsx`             |
+| `packages/api-client`, `packages/types` | `.ts`만        | 생성·타입 코드                   |
+
+#### 제약사항
+
+| 제약                  | 설명                                                                                  |
+| --------------------- | ------------------------------------------------------------------------------------- |
+| JSX → `.tsx` 필수     | `.ts`에 `<div>` 등 JSX 작성 시 TypeScript 컴파일 에러                                 |
+| Next 예약 파일명      | `page.tsx`, `layout.tsx`, `loading.tsx` 등 — 확장자·이름 변경 불가                    |
+| 배럴은 `index.ts`     | re-export만 할 때 `.tsx` 불필요 (`apps/web`, `apps/admin`, `templates/app` 기준)       |
+| ESLint 자동 검사 없음 | `eslint.config.mjs`에 확장자 강제 규칙 없음 → **문서 + 코드 리뷰**로 준수            |
+
+#### 허용되는 예외
+
+| 예외                                                                                                                       | 이유                                                         |
+| -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `packages/ui/src/qcell/index.tsx`, `packages/ui/src/chart/index.tsx`                                                       | 배럴 파일이지만 **JSX 컴포넌트 본문**을 포함 → `.tsx`가 맞음 |
+| hook 파일에 `import { useState } from "react"`                                                                             | JSX 없으면 `.ts` 유지 (`useQnaForm.ts` 패턴)                 |
+| `routes.ts`에 `import type { ComponentType }`                                                                              | 타입 전용 import → `.ts`                                     |
+
+#### 안티패턴
+
+| 잘못된 예                 | 올바른 예          | 이유                                |
+| ------------------------- | ------------------ | ----------------------------------- |
+| `index.tsx` (re-export만) | `index.ts`         | JSX 없음, web/admin 컨벤션과 불일치 |
+| `useNoticeList.tsx`       | `useNoticeList.ts` | hook은 JSX 없음                     |
+| `types.tsx`               | `types.ts`         | 순수 타입                           |
+| `routes.tsx`              | `routes.ts`        | 설정·상수                           |
+
+#### 예시
+
+**배럴 — `.ts`**
+
+```ts
+// features/noticeCreate/index.ts
+export { NoticeCreateForm } from "./ui/NoticeCreateForm";
+export { useNoticeCreate } from "./model/useNoticeCreate";
+```
+
+**컴포넌트 — `.tsx`**
+
+```tsx
+// features/noticeCreate/ui/NoticeCreateForm.tsx
+export function NoticeCreateForm() {
+  return <form>...</form>;
+}
+```
+
+**hook — React import 있어도 `.ts`**
+
+```ts
+// features/noticeCreate/model/useNoticeCreate.ts
+import { useMutation } from "@tanstack/react-query";
+
+export function useNoticeCreate() {
+  return useMutation({
+    mutationFn: (data) => createNotice(data),
+  });
+}
+```
+
+**Next 진입점 — 얇은 re-export도 `.tsx`**
+
+```tsx
+// apps/web/app/(main)/notice/page.tsx
+export { NoticePage as default } from "@/screens/notice";
+```
 
 ---
 
@@ -522,15 +719,27 @@ import { routes } from "@/shared/config/routes";
 
 ### 7) 공통 hook을 추가할 때
 
-도메인 이름이 없는 hook만 `src/shared/lib/` (또는 `shared/lib/hooks/`)에 둡니다.
+전체 배치 기준은 [§6 Custom Hook 배치 가이드 (종합)](#custom-hook-배치-가이드-종합)를 참고하세요.
+
+**도메인 이름이 없는** 순수 유틸 훅만 `src/shared/lib/`에 둡니다.
 
 ```
 src/shared/lib/
-  use-debounce.ts
+  useDebounce.ts
   index.ts
 ```
 
-공지 목록 조회 hook은 `entities/notice/model/use-notice-list.ts`처럼 **entity/feature** 쪽에 둡니다.
+```ts
+// src/shared/lib/index.ts
+export { useDebounce } from "./useDebounce";
+```
+
+**도메인이 있는** 훅(공지 목록 조회 등)은 `shared`가 아니라 **entity/feature의 `model/`** 에 둡니다.
+
+```
+src/entities/notice/model/useNoticeList.ts   ← GET 조회
+src/features/noticeCreate/model/useNoticeCreate.ts   ← POST 등록
+```
 
 ---
 
@@ -661,10 +870,10 @@ export function NoticePage() {
 
 | segment           | 무엇을 넣나          | 주의                                      |
 | ----------------- | -------------------- | ----------------------------------------- |
-| `model/types.ts`  | 타입·인터페이스      | 로직 없음, 순수 타입만                    |
-| `model/use*.ts`   | custom hook          | 조회→entities, 쓰기→features              |
+| `model/types.ts`  | 타입·인터페이스      | 로직 없음, 순수 타입만 — [확장자 가이드](#파일-확장자-ts--tsx) |
+| `model/use*.ts`   | custom hook          | 조회→entities, 쓰기→features — [확장자 가이드](#파일-확장자-ts--tsx) |
 | `model/schema.ts` | zod 등 유효성 스키마 | 해당 feature 안에서만 사용                |
-| `ui/*.tsx`        | React 컴포넌트       | 외부에서 index.ts 통해서만 import         |
+| `ui/*.tsx`        | React 컴포넌트       | 외부에서 index.ts 통해서만 import — [확장자 가이드](#파일-확장자-ts--tsx) |
 | `api/*.ts`        | API 호출 함수        | Orval 생성 함수 래핑                      |
 | `lib/*.ts`        | slice 내부 전용 유틸 | 외부에서 import 금지                      |
 | `index.ts`        | 외부 공개 API        | 여기서만 export, 내부 파일 직접 접근 금지 |
@@ -1180,7 +1389,8 @@ apps/admin/app/(main)/layout.tsx       ← admin MDI 어댑터 (storageKey: mdi-
 
 ## 13. 새 기능 넣을 때 체크리스트
 
-새 기능을 어디에 넣을지 모르겠다면 아래 흐름도를 따라가세요.
+새 기능을 어디에 넣을지 모르겠다면 아래 흐름도를 따라가세요.  
+새 파일을 만들 때 확장자(`.ts` / `.tsx`) 선택은 [파일 확장자 가이드](#파일-확장자-ts--tsx)를 참고하세요.
 
 ```mermaid
 flowchart TD
@@ -1227,6 +1437,9 @@ flowchart TD
 | Orval 생성 API·axios                 | `@repo/api-client`                         |
 | QueryClient·queryKeys                | `@repo/query`                              |
 | debounce 등 순수 유틸 hook           | `src/shared/lib/` (camelCase 파일명)       |
+| GET 조회 hook (목록·상세)            | `src/entities/<name>/model/use*.ts`        |
+| POST/PUT/DELETE·폼 hook              | `src/features/<name>/model/use*.ts`        |
+| 여러 feature 공유 Zustand store      | `src/shared/model/use*Store.ts`           |
 
 **notice 목록 API 연동 예 (추가 시 권장 구조)**
 
