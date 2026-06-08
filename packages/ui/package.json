@@ -29,6 +29,7 @@
     "./layout/login-layout": "./src/layout/LoginLayout.tsx",
     "./layout/base-layout": "./src/layout/BaseLayout.tsx",
     "./layout/mdi": "./src/layout/mdi/index.ts",
+    "./layout/modal": "./src/layout/modal/index.ts",
     "./providers": "./src/providers/index.ts"
   },
   "scripts": {
