@@ -6,25 +6,293 @@
  * OpenAPI spec version: 1.0.0
  */
 import {
-  useMutation
+  useMutation,
+  useQuery
 } from '@tanstack/react-query';
 import type {
+  DataTag,
+  DefinedInitialDataOptions,
+  DefinedUseQueryResult,
   MutationFunction,
   QueryClient,
+  QueryFunction,
+  QueryKey,
+  UndefinedInitialDataOptions,
   UseMutationOptions,
-  UseMutationResult
+  UseMutationResult,
+  UseQueryOptions,
+  UseQueryResult
 } from '@tanstack/react-query';
 
 import type {
   ListPostsParams,
+  SampleTagPostCreateRequest,
   SampleTagPostDetailResponse,
-  SampleTagPostListResponse
+  SampleTagPostListResponse,
+  SampleTagPostUpdateRequest
 } from '../../models/sampletag';
 
 import { customInstance } from '../../../../axios-instance';
 
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
+
+
+/**
+ * ID로 게시글 상세 조회
+ * @summary 게시글 상세
+ */
+export const getPost = (
+    id: number,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<SampleTagPostDetailResponse>(
+      {url: `/api/sampletag/posts/${id}`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+
+export const getGetPostMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getPost>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof getPost>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['getPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof getPost>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  getPost(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type GetPostMutationResult = NonNullable<Awaited<ReturnType<typeof getPost>>>
+
+    export type GetPostMutationError = unknown
+
+    /**
+ * @summary 게시글 상세
+ */
+export const useGetPost = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getPost>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof getPost>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getGetPostMutationOptions(options), queryClient);
+    }
+    /**
+ * ID로 게시글의 제목과 본문을 수정합니다.
+ * @summary 게시글 수정
+ */
+export const updatePost = (
+    id: number,
+    sampleTagPostUpdateRequest: SampleTagPostUpdateRequest,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<SampleTagPostDetailResponse>(
+      {url: `/api/sampletag/posts/${id}`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: sampleTagPostUpdateRequest, signal
+    },
+      options);
+    }
+
+
+
+
+export const getUpdatePostQueryKey = (id: number,
+    sampleTagPostUpdateRequest?: SampleTagPostUpdateRequest,) => {
+    return [
+    'PUT', `/api/sampletag/posts/${id}`, sampleTagPostUpdateRequest
+    ] as const;
+    }
+
+
+export const getUpdatePostQueryOptions = <TData = Awaited<ReturnType<typeof updatePost>>, TError = unknown>(id: number,
+    sampleTagPostUpdateRequest: SampleTagPostUpdateRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updatePost>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getUpdatePostQueryKey(id,sampleTagPostUpdateRequest);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof updatePost>>> = ({ signal }) => updatePost(id,sampleTagPostUpdateRequest, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof updatePost>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type UpdatePostQueryResult = NonNullable<Awaited<ReturnType<typeof updatePost>>>
+export type UpdatePostQueryError = unknown
+
+
+export function useUpdatePost<TData = Awaited<ReturnType<typeof updatePost>>, TError = unknown>(
+ id: number,
+    sampleTagPostUpdateRequest: SampleTagPostUpdateRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof updatePost>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof updatePost>>,
+          TError,
+          Awaited<ReturnType<typeof updatePost>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useUpdatePost<TData = Awaited<ReturnType<typeof updatePost>>, TError = unknown>(
+ id: number,
+    sampleTagPostUpdateRequest: SampleTagPostUpdateRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updatePost>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof updatePost>>,
+          TError,
+          Awaited<ReturnType<typeof updatePost>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useUpdatePost<TData = Awaited<ReturnType<typeof updatePost>>, TError = unknown>(
+ id: number,
+    sampleTagPostUpdateRequest: SampleTagPostUpdateRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updatePost>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 게시글 수정
+ */
+
+export function useUpdatePost<TData = Awaited<ReturnType<typeof updatePost>>, TError = unknown>(
+ id: number,
+    sampleTagPostUpdateRequest: SampleTagPostUpdateRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updatePost>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getUpdatePostQueryOptions(id,sampleTagPostUpdateRequest,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+/**
+ * ID로 게시글을 삭제합니다.
+ * @summary 게시글 삭제
+ */
+export const deletePost = (
+    id: number,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/api/sampletag/posts/${id}`, method: 'DELETE', signal
+    },
+      options);
+    }
+
+
+
+
+export const getDeletePostQueryKey = (id: number,) => {
+    return [
+    'DELETE', `/api/sampletag/posts/${id}`
+    ] as const;
+    }
+
+
+export const getDeletePostQueryOptions = <TData = Awaited<ReturnType<typeof deletePost>>, TError = unknown>(id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deletePost>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getDeletePostQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof deletePost>>> = ({ signal }) => deletePost(id, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof deletePost>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type DeletePostQueryResult = NonNullable<Awaited<ReturnType<typeof deletePost>>>
+export type DeletePostQueryError = unknown
+
+
+export function useDeletePost<TData = Awaited<ReturnType<typeof deletePost>>, TError = unknown>(
+ id: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof deletePost>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof deletePost>>,
+          TError,
+          Awaited<ReturnType<typeof deletePost>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useDeletePost<TData = Awaited<ReturnType<typeof deletePost>>, TError = unknown>(
+ id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deletePost>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof deletePost>>,
+          TError,
+          Awaited<ReturnType<typeof deletePost>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useDeletePost<TData = Awaited<ReturnType<typeof deletePost>>, TError = unknown>(
+ id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deletePost>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 게시글 삭제
+ */
+
+export function useDeletePost<TData = Awaited<ReturnType<typeof deletePost>>, TError = unknown>(
+ id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deletePost>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getDeletePostQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
 
 
 
@@ -92,64 +360,97 @@ export const useListPosts = <TError = unknown,
       return useMutation(getListPostsMutationOptions(options), queryClient);
     }
     /**
- * ID로 게시글 상세 조회
- * @summary 게시글 상세
+ * 새 게시글을 등록합니다. author는 JWT 로그인 사용자명으로 설정됩니다.
+ * @summary 게시글 등록
  */
-export const getPost = (
-    id: number,
+export const createPost = (
+    sampleTagPostCreateRequest: SampleTagPostCreateRequest,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
 
 
       return customInstance<SampleTagPostDetailResponse>(
-      {url: `/api/sampletag/posts/${id}`, method: 'GET', signal
+      {url: `/api/sampletag/posts`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: sampleTagPostCreateRequest, signal
     },
       options);
     }
 
 
 
-export const getGetPostMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getPost>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof getPost>>, TError,{id: number}, TContext> => {
 
-const mutationKey = ['getPost'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof getPost>>, {id: number}> = (props) => {
-          const {id} = props ?? {};
-
-          return  getPost(id,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type GetPostMutationResult = NonNullable<Awaited<ReturnType<typeof getPost>>>
-
-    export type GetPostMutationError = unknown
-
-    /**
- * @summary 게시글 상세
- */
-export const useGetPost = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getPost>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customInstance>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof getPost>>,
-        TError,
-        {id: number},
-        TContext
-      > => {
-      return useMutation(getGetPostMutationOptions(options), queryClient);
+export const getCreatePostQueryKey = (sampleTagPostCreateRequest?: SampleTagPostCreateRequest,) => {
+    return [
+    'POST', `/api/sampletag/posts`, sampleTagPostCreateRequest
+    ] as const;
     }
+
+
+export const getCreatePostQueryOptions = <TData = Awaited<ReturnType<typeof createPost>>, TError = unknown>(sampleTagPostCreateRequest: SampleTagPostCreateRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createPost>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getCreatePostQueryKey(sampleTagPostCreateRequest);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof createPost>>> = ({ signal }) => createPost(sampleTagPostCreateRequest, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof createPost>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type CreatePostQueryResult = NonNullable<Awaited<ReturnType<typeof createPost>>>
+export type CreatePostQueryError = unknown
+
+
+export function useCreatePost<TData = Awaited<ReturnType<typeof createPost>>, TError = unknown>(
+ sampleTagPostCreateRequest: SampleTagPostCreateRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof createPost>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof createPost>>,
+          TError,
+          Awaited<ReturnType<typeof createPost>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useCreatePost<TData = Awaited<ReturnType<typeof createPost>>, TError = unknown>(
+ sampleTagPostCreateRequest: SampleTagPostCreateRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createPost>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof createPost>>,
+          TError,
+          Awaited<ReturnType<typeof createPost>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useCreatePost<TData = Awaited<ReturnType<typeof createPost>>, TError = unknown>(
+ sampleTagPostCreateRequest: SampleTagPostCreateRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createPost>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 게시글 등록
+ */
+
+export function useCreatePost<TData = Awaited<ReturnType<typeof createPost>>, TError = unknown>(
+ sampleTagPostCreateRequest: SampleTagPostCreateRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createPost>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getCreatePostQueryOptions(sampleTagPostCreateRequest,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
